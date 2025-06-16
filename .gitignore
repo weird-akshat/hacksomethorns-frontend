@@ -1,0 +1,39 @@
+# General
+.env
+.env.*
+*.log
+*.pyc
+__pycache__/
+.DS_Store
+
+# IDEs/editors
+.idea/
+.vscode/
+*.iml
+
+# Node (if used)
+node_modules/
+
+# Python
+*.egg-info/
+*.sqlite3
+db.sqlite3
+*.db
+*.pot
+*.py[cod]
+__pycache__/
+local_settings.py
+
+# Django
+/staticfiles/
+media/
+*.mo
+*.log
+*.pot
+*.py[cod]
+.env.local
+.env.production
+db.sqlite3
+
+# Migrations
+**/migrations/
