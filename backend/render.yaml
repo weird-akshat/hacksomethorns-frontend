@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: refl3kt-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DATABASE_URL
+        fromDatabase:
+          name: refl3kt-db
+          property: connectionString
+
+databases:
+  - name: refl3kt-db
+    databaseName: refl3kt_db
+    user: refl3kt_user
+    plan: free 

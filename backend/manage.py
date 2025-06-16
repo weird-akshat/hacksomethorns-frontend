@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#C:\Users\hrith\OneDrive\Desktop\IECSE\HackSomeThorns\venv\bin\python
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
