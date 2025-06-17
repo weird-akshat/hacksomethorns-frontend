@@ -1,39 +1,82 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from django.utils import timezone
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 from datetime import timedelta
+from django.shortcuts import get_object_or_404
 from .models import Category, TimeEntry
 from .serializers import CategorySerializer, TimeEntrySerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Category.objects.filter(user=self.request.user)
+        return Category.objects.all().order_by('name')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save()  # No user assignment
+
+    def perform_update(self, serializer):
+        serializer.save()  # No user assignment
+
+    def perform_destroy(self, instance):
+        # Check if category is in use
+        if TimeEntry.objects.filter(category=instance).exists():
+            return Response(
+                {"error": "Cannot delete category that has time entries"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        instance.delete()
 
 class TimeEntryViewSet(viewsets.ModelViewSet):
     serializer_class = TimeEntrySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return TimeEntry.objects.filter(user=self.request.user)
+        queryset = TimeEntry.objects.all()
+        
+        # Add filtering options
+        category_id = self.request.query_params.get('category_id')
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        
+        if start_date:
+            try:
+                start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d')
+                queryset = queryset.filter(start_time__gte=start_date)
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d')
+                queryset = queryset.filter(start_time__lte=end_date)
+            except ValueError:
+                pass
+        
+        return queryset.order_by('-start_time')
 
     def perform_create(self, serializer):
         # Deactivate any existing active entries
-        TimeEntry.objects.filter(user=self.request.user, is_active=True).update(is_active=False)
-        serializer.save(user=self.request.user, is_active=True)
+        TimeEntry.objects.filter(is_active=True).update(is_active=False)
+        serializer.save(is_active=True)  # No user assignment
+
+    def perform_update(self, serializer):
+        serializer.save()  # No user assignment
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
     @action(detail=False, methods=['get'])
     def current_time_entry(self, request):
         try:
-            entry = TimeEntry.objects.get(user=request.user, is_active=True)
+            entry = TimeEntry.objects.get(is_active=True)
             serializer = self.get_serializer(entry)
             return Response(serializer.data)
         except TimeEntry.DoesNotExist:
@@ -44,7 +87,6 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
         # Get entries from last 7 days
         start_date = timezone.now() - timedelta(days=7)
         entries = TimeEntry.objects.filter(
-            user=request.user,
             start_time__gte=start_date
         ).order_by('-start_time')
 
@@ -81,7 +123,6 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
 
         # Base query
         query = Q(
-            user=request.user,
             start_time__gte=start_date,
             start_time__lte=end_date
         )
@@ -93,11 +134,14 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
 
         # Calculate total duration for each category
         category_stats = {}
+        total_duration = timedelta()
+        
         for entry in entries:
             category_name = entry.category.name if entry.category else "Uncategorized"
             if category_name not in category_stats:
                 category_stats[category_name] = timedelta()
             category_stats[category_name] += entry.duration
+            total_duration += entry.duration
 
         # Calculate daily stats
         daily_stats = {}
@@ -111,7 +155,17 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
                 daily_stats[date_str][category_name] = timedelta()
             daily_stats[date_str][category_name] += entry.duration
 
+        # Calculate category percentages
+        category_percentages = {}
+        if total_duration:
+            for category, duration in category_stats.items():
+                percentage = (duration.total_seconds() / total_duration.total_seconds()) * 100
+                category_percentages[category] = round(percentage, 2)
+
         return Response({
             'category_totals': {k: str(v) for k, v in category_stats.items()},
-            'daily_stats': daily_stats
+            'daily_stats': daily_stats,
+            'total_duration': str(total_duration),
+            'category_percentages': category_percentages,
+            'total_entries': entries.count()
         })

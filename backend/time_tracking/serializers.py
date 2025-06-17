@@ -7,6 +7,10 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'color', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
+    def create(self, validated_data):
+        # Create category without user
+        return Category.objects.create(**validated_data)
+
 class TimeEntrySerializer(serializers.ModelSerializer):
     duration = serializers.DurationField(read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
@@ -29,12 +33,13 @@ class TimeEntrySerializer(serializers.ModelSerializer):
             
         # Check for existing active entry when creating a new one
         if not self.instance and data.get('is_active', True):
-            if TimeEntry.objects.filter(
-                user=self.context['request'].user,
-                is_active=True
-            ).exists():
+            if TimeEntry.objects.filter(is_active=True).exists():
                 raise serializers.ValidationError(
-                    "You already have an active time entry. Please end it before starting a new one."
+                    "There is already an active time entry. Please end it before starting a new one."
                 )
             
         return data
+
+    def create(self, validated_data):
+        # Create time entry without user
+        return TimeEntry.objects.create(**validated_data)

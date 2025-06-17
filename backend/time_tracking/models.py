@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 class Category(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_categories')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_categories', null=True, blank=True)
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default="#FFFFFF")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -15,10 +15,10 @@ class Category(models.Model):
         unique_together = ['user', 'name']
 
     def __str__(self):
-        return f"{self.user.username}'s {self.name}"
+        return f"{self.name}"
 
 class TimeEntry(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_entries')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_entries', null=True, blank=True)
     description = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
@@ -32,7 +32,7 @@ class TimeEntry(models.Model):
         ordering = ['-start_time']
 
     def __str__(self):
-        return f"{self.user.username}'s entry: {self.description[:50]}"
+        return f"Entry: {self.description[:50]}"
 
     def clean(self):
         if self.end_time and self.start_time >= self.end_time:
@@ -40,9 +40,8 @@ class TimeEntry(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_active:
-            # Deactivate other active entries for this user
+            # Deactivate other active entries
             TimeEntry.objects.filter(
-                user=self.user,
                 is_active=True
             ).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
