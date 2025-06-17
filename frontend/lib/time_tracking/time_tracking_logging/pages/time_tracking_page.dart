@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
@@ -6,6 +7,7 @@ import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sh
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/day_timeline_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/timeline_widget.dart';
+import 'package:provider/provider.dart';
 
 class TimeTrackingPage extends StatefulWidget {
   const TimeTrackingPage({super.key});
@@ -17,8 +19,9 @@ class TimeTrackingPage extends StatefulWidget {
 class _TimeTrackingPageState extends State<TimeTrackingPage> {
   @override
   Widget build(BuildContext context) {
+    var themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: scaffoldColor,
+      // backgroundColor: scaffoldColor,
       // bottomSheet: Container(),
       appBar: AppBar(
         actions: [
@@ -53,9 +56,15 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                 color: Colors.white,
               ),
             ),
+          ),
+          Switch(
+            value: themeProvider.themeMode == ThemeMode.dark,
+            onChanged: (value) {
+              themeProvider.toggleTheme(value);
+            },
           )
         ],
-        backgroundColor: scaffoldColor,
+        // backgroundColor: scaffoldColor,
         title: Text(
           'Timer',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),

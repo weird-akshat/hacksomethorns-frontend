@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Clean black and white theme
-Color scaffoldColor = Color(0xff0A0A0A); // Pure black background
+// Color scaffoldColor = Color(0xff0A0A0A); // Pure black background
 
 // time_entry_widget
 const double timeEntryWidgetPadding = 4;
