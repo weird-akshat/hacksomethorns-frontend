@@ -86,6 +86,10 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       ChartData('Others', 52)
     ];
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Detailed Category Report"),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

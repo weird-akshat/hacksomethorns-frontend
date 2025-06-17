@@ -13,7 +13,6 @@ class _HomeState extends State<Home> {
   Widget currentWidgetPage = TimeTrackingPage();
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     // Widget currentWidgetPage= TimeTrackingPage() ;
 
@@ -26,10 +25,13 @@ class _HomeState extends State<Home> {
       drawer: Drawer(
         child: ListView(
           children: [
-            DrawerHeader(
-              padding: EdgeInsets.all(0),
-              child: Icon(Icons.menu),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                child: Text('Menu'),
+              ),
             ),
+            Divider(),
             ListTile(
               title: Text('Time Tracking Page'),
               onTap: () {
