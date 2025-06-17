@@ -1,6 +1,8 @@
+// day_timeline_widget.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/widgets/time_entry_widget.dart';
+import 'package:frontend/time_tracking/pages/configuration.dart';
 
 class DayTimelineWidget extends StatelessWidget {
   const DayTimelineWidget({super.key, required this.date, required this.list});
@@ -10,21 +12,27 @@ class DayTimelineWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: dayTimelineWidgetCrossAxisAlignment,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("${date.day}/${date.month}/${date.year}"),
+          padding: const EdgeInsets.all(dayTimelineWidgetPadding),
+          child: Text(
+            "${date.day}/${date.month}/${date.year}",
+            style: TextStyle(
+              fontSize: MediaQuery.of(context).size.height *
+                  dayTimelineWidgetDateFontSize,
+              fontWeight: dayTimelineWidgetDateFontWeight,
+              color: dayTimelineWidgetDateColor,
+            ),
+          ),
         ),
         ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             itemCount: list.length,
             itemBuilder: (context, index) {
-              // print(list);
               return TimeEntryWidget(
                 timeEntry: list[index],
-                // context: context,
               );
             })
       ],
