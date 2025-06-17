@@ -88,7 +88,10 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text("Detailed Category Report"),
+        title: Text(
+          "Category Name Report",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -96,7 +99,6 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Text('Duration'),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -107,7 +109,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                     ],
                   ),
                 ),
+                Text(
+                  'Total Duration',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+                ),
+                // Text('Time Entry Divison'),
                 SfCircularChart(
+                  legend: Legend(isVisible: true),
                   series: <CircularSeries>[
                     // Render pie chart
                     PieSeries<ChartData, String>(

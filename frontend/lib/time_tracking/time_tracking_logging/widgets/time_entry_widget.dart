@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
+import 'package:provider/provider.dart';
 
 class TimeEntryWidget extends StatefulWidget {
   final TimeEntry timeEntry;
@@ -15,12 +17,15 @@ class TimeEntryWidget extends StatefulWidget {
 }
 
 class _TimeEntryWidgetState extends State<TimeEntryWidget> {
-  TextStyle style = TextStyle(
-      fontWeight: timeEntryWidgetFontweight,
-      color: timeEntryWidgetTextColor,
-      overflow: TextOverflow.ellipsis);
   @override
   Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+        fontWeight: timeEntryWidgetFontweight,
+        color: Provider.of<ThemeProvider>(context).isDarkMode
+            ? timeEntryWidgetTextColorDark
+            : timeEntryWidgetTextColorLight,
+        overflow: TextOverflow.ellipsis);
+
     return Padding(
       padding: const EdgeInsets.all(timeEntryWidgetPadding),
       child: Column(
@@ -44,12 +49,26 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
                 decoration: BoxDecoration(
                     borderRadius: timeEntryWidgetBorderRadius,
                     border: Border(
-                      top: BorderSide(color: timeEntryWidgetBorderColor),
-                      bottom: BorderSide(color: timeEntryWidgetBorderColor),
-                      left: BorderSide(color: timeEntryWidgetBorderColor),
-                      right: BorderSide(color: timeEntryWidgetBorderColor),
+                      top: BorderSide(
+                          color: Provider.of<ThemeProvider>(context).isDarkMode
+                              ? timeEntryWidgetBorderColorDark
+                              : timeEntryWidgetBorderColorLight),
+                      bottom: BorderSide(
+                          color: Provider.of<ThemeProvider>(context).isDarkMode
+                              ? timeEntryWidgetBorderColorDark
+                              : timeEntryWidgetBorderColorLight),
+                      left: BorderSide(
+                          color: Provider.of<ThemeProvider>(context).isDarkMode
+                              ? timeEntryWidgetBorderColorDark
+                              : timeEntryWidgetBorderColorLight),
+                      right: BorderSide(
+                          color: Provider.of<ThemeProvider>(context).isDarkMode
+                              ? timeEntryWidgetBorderColorDark
+                              : timeEntryWidgetBorderColorLight),
                     ),
-                    color: timeEntryWidgetColor),
+                    color: Provider.of<ThemeProvider>(context).isDarkMode
+                        ? timeEntryWidgetColorDark
+                        : timeEntryWidgetColorLight),
                 width: MediaQuery.of(context).size.width *
                     timeEntryWidgetWidthMultiplier,
                 height: MediaQuery.of(context).size.height *
@@ -88,6 +107,10 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
                           ),
                           Icon(
                             Icons.play_arrow,
+                            color:
+                                Provider.of<ThemeProvider>(context).isDarkMode
+                                    ? timeEntryWidgetTextColorDark
+                                    : timeEntryWidgetTextColorLight,
                             size: MediaQuery.of(context).size.height *
                                 timeEntryWidgetIconSize,
                           ),
