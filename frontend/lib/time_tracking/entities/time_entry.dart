@@ -1,11 +1,11 @@
 class TimeEntry {
-  final String _description;
-  final String _timeEntryId;
-  final String _userId;
-  final DateTime _startTime;
-  final DateTime _endTime;
-  final int _categoryId;
-  final String _categoryName;
+  String _description;
+  String _timeEntryId;
+  String _userId;
+  DateTime _startTime;
+  DateTime _endTime;
+  int _categoryId;
+  String _categoryName;
 
   TimeEntry({
     required String description,
@@ -30,6 +30,14 @@ class TimeEntry {
   DateTime get endTime => _endTime;
   int get categoryId => _categoryId;
   String get categoryName => _categoryName;
+
+  set description(String value) => _description = value;
+  set timeEntryId(String value) => _timeEntryId = value;
+  set userId(String value) => _userId = value;
+  set startTime(DateTime value) => _startTime = value;
+  set endTime(DateTime value) => _endTime = value;
+  set categoryId(int value) => _categoryId = value;
+  set categoryName(String value) => _categoryName = value;
 
   Duration get duration => _endTime.difference(_startTime);
 }
