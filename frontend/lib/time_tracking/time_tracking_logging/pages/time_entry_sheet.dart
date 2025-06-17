@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/api_methods/fetch_time_entries.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 
@@ -74,7 +75,9 @@ class _TimeEntrySheetState extends State<TimeEntrySheet> {
                       fontWeight: FontWeight.bold),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await fetchTimeEntries();
+                  },
                   style: ButtonStyle(
                       iconColor: WidgetStatePropertyAll(Colors.white),
                       shape: WidgetStatePropertyAll(RoundedRectangleBorder(
