@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/widgets/showcase_time_entry_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -134,7 +135,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: list.length,
                     itemBuilder: (context, index) {
-                      return TimeEntryWidget(timeEntry: list[index]);
+                      return ShowcaseTimeEntryWidget(timeEntry: list[index]);
                     })
               ],
             ),
