@@ -17,10 +17,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Category.objects.all().order_by('name')
 
     def perform_create(self, serializer):
-        serializer.save()  # No user assignment
+        serializer.save()
 
     def perform_update(self, serializer):
-        serializer.save()  # No user assignment
+        serializer.save()
 
     def perform_destroy(self, instance):
         # Check if category is in use
@@ -39,9 +39,9 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
         queryset = TimeEntry.objects.all()
         
         # Add filtering options
-        category_id = self.request.query_params.get('category_id')
-        start_date = self.request.query_params.get('start_date')
-        end_date = self.request.query_params.get('end_date')
+        category_id = self.request.query_params.get('_categoryId')
+        start_date = self.request.query_params.get('_startTime')
+        end_date = self.request.query_params.get('_endTime')
         
         if category_id:
             queryset = queryset.filter(category_id=category_id)
@@ -65,10 +65,10 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Deactivate any existing active entries
         TimeEntry.objects.filter(is_active=True).update(is_active=False)
-        serializer.save(is_active=True)  # No user assignment
+        serializer.save(is_active=True)
 
     def perform_update(self, serializer):
-        serializer.save()  # No user assignment
+        serializer.save()
 
     def perform_destroy(self, instance):
         instance.delete()
@@ -102,13 +102,13 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def analytics(self, request):
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
-        category_id = request.query_params.get('category_id')
+        start_date = request.query_params.get('_startTime')
+        end_date = request.query_params.get('_endTime')
+        category_id = request.query_params.get('_categoryId')
 
         if not start_date or not end_date:
             return Response(
-                {"error": "start_date and end_date are required"},
+                {"error": "_startTime and _endTime are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
