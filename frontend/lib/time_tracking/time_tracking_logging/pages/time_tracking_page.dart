@@ -53,21 +53,29 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
               },
               child: Icon(
                 Icons.add,
-                color: Colors.white,
+                color: themeProvider.isDarkMode
+                    ? timeEntryWidgetTextColorDark
+                    : timeEntryWidgetTextColorLight,
               ),
             ),
           ),
-          Switch(
-            value: themeProvider.themeMode == ThemeMode.dark,
-            onChanged: (value) {
-              themeProvider.toggleTheme(value);
+          IconButton(
+            icon: Icon(
+                themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
+            onPressed: () {
+              themeProvider
+                  .toggleTheme(); // no value passed, it toggles internally
             },
           )
         ],
         // backgroundColor: scaffoldColor,
         title: Text(
           'Timer',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: themeProvider.isDarkMode
+                  ? timeEntryWidgetTextColorDark
+                  : timeEntryWidgetTextColorLight),
         ),
       ),
       body: SafeArea(
@@ -114,12 +122,21 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                         children: [
                           Text(
                             'Duration',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                                color: themeProvider.isDarkMode
+                                    ? timeEntryWidgetTextColorDark
+                                    : timeEntryWidgetTextColorLight),
                           ),
                           Text('Description',
-                              style: TextStyle(color: Colors.white)),
+                              style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? timeEntryWidgetTextColorDark
+                                      : timeEntryWidgetTextColorLight)),
                           Text('Category',
-                              style: TextStyle(color: Colors.white)),
+                              style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? timeEntryWidgetTextColorDark
+                                      : timeEntryWidgetTextColorLight)),
                         ],
                       ),
                     ),
