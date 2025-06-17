@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/time_tracking/pages/time_tracking_page.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: TimeTrackingPage(),
+      home: CategoryAnalytics(),
       theme: ThemeData.light(),
     );
   }

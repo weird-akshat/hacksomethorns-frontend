@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/time_tracking/configuration.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
-import 'package:frontend/time_tracking/pages/time_entry_sheet.dart';
-import 'package:frontend/time_tracking/widgets/day_timeline_widget.dart';
-import 'package:frontend/time_tracking/widgets/time_entry_widget.dart';
-import 'package:frontend/time_tracking/widgets/timeline_widget.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/widgets/day_timeline_widget.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/widgets/timeline_widget.dart';
 
 class TimeTrackingPage extends StatefulWidget {
   const TimeTrackingPage({super.key});
