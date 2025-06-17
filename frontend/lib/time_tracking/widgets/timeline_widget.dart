@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/widgets/day_timeline_widget.dart';
+import 'package:frontend/time_tracking/pages/configuration.dart';
 
 class TimelineWidget extends StatelessWidget {
   TimelineWidget({super.key});
@@ -775,7 +776,8 @@ class TimelineWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-        // shrinkWrap: true,
+        physics: timelineWidgetScrollPhysics,
+        shrinkWrap: timelineWidgetShrinkWrap,
         itemCount: map.length,
         itemBuilder: (context, index) => DayTimelineWidget(
             date: map.keys.elementAt(index),
