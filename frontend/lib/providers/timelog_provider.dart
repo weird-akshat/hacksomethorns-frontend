@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/api_methods/fetch_time_entries.dart';
+import 'package:frontend/time_tracking/entities/time_entry.dart';
 
 class TimelogProvider with ChangeNotifier {
-  Map map = {};
+  Map<DateTime, List<TimeEntry>> map = {};
 
-  void loadTimeEntries() {
+  bool isEmpty() {
+    return map.isEmpty;
+  }
+
+  Future<void> loadTimeEntries() async {
+    map = await fetchTimeEntries();
     notifyListeners();
   }
 }

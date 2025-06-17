@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/home.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
@@ -16,8 +17,15 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]).then((_) {
-    runApp(ChangeNotifierProvider(
-        create: (_) => ThemeProvider(), child: const MyApp()));
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => TimelogProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
   });
 }
 

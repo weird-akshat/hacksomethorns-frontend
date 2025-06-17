@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/api_methods/fetch_time_entries.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
@@ -17,6 +19,17 @@ class TimeTrackingPage extends StatefulWidget {
 }
 
 class _TimeTrackingPageState extends State<TimeTrackingPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    final timelogProvider =
+        Provider.of<TimelogProvider>(context, listen: false);
+    if (timelogProvider.isEmpty()) {
+      timelogProvider.loadTimeEntries();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var themeProvider = Provider.of<ThemeProvider>(context);
@@ -82,7 +95,9 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(child: TimelineWidget()),
+            Expanded(
+                child:
+                    TimelineWidget(Provider.of<TimelogProvider>(context).map)),
             GestureDetector(
               onTap: () {
                 showModalBottomSheet(
