@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/time_tracking/home.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +14,8 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]).then((_) {
-    runApp(const MyApp());
+    runApp(ChangeNotifierProvider(
+        create: (_) => ThemeProvider(), child: const MyApp()));
   });
 }
 
@@ -21,9 +24,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lightTheme = ThemeData(
+      brightness: Brightness.light,
+      primarySwatch: Colors.blue,
+    );
+
+    final darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: Colors.blue,
+    );
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       home: Home(),
-      theme: ThemeData.light(),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode,
     );
   }
 }
