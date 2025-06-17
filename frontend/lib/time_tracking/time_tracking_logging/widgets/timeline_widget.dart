@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/time_tracking/configuration.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
-import 'package:frontend/time_tracking/widgets/day_timeline_widget.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/widgets/day_timeline_widget.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
 
 class TimelineWidget extends StatelessWidget {

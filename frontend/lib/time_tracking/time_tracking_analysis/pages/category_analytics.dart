@@ -1,118 +1,44 @@
+// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/time_tracking/entities/time_entry.dart';
+import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
+import 'package:frontend/time_tracking/entities/category.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_widget.dart';
 
-class TimeEntrySheet extends StatefulWidget {
-  const TimeEntrySheet({super.key, required this.timeEntry});
-  final TimeEntry timeEntry;
+class CategoryAnalytics extends StatefulWidget {
+  const CategoryAnalytics({super.key});
+
   @override
-  State<TimeEntrySheet> createState() => _TimeEntrySheetState();
+  State<CategoryAnalytics> createState() => _CategoryAnalyticsState();
 }
 
-class _TimeEntrySheetState extends State<TimeEntrySheet> {
-  Widget buildGrabHandle() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 8),
-        width: 40,
-        height: 5,
-        decoration: BoxDecoration(
-          color: Colors.grey[600],
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-  }
-
-  late DateTime newStartTime;
-  late DateTime newEndTime;
-  late String desc;
+class _CategoryAnalyticsState extends State<CategoryAnalytics> {
+  late final newStartTime;
+  late final newEndTime;
+  final List<Category> list = [
+    Category('user1', 1, 'Work', Colors.blue),
+    Category('user1', 2, 'Study', Colors.green),
+    Category('user1', 3, 'Exercise', Colors.red),
+    Category('user1', 4, 'Leisure', Colors.orange),
+    Category('user1', 5, 'Sleep', Colors.purple),
+  ];
 
   @override
   void initState() {
     super.initState();
-    newStartTime = widget.timeEntry.startTime;
-    newEndTime = widget.timeEntry.endTime;
-    desc = widget.timeEntry.description;
+    newStartTime = DateTime.now();
+    newEndTime = DateTime.now();
   }
 
   @override
   Widget build(BuildContext context) {
-    // String newDescription;
-    return Container(
-      color: Colors.black,
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Category Analytics'),
+        centerTitle: true,
+      ),
+      body: Center(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: buildGrabHandle(),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                    style: ButtonStyle(
-                        iconColor: WidgetStatePropertyAll(Colors.white),
-                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10))),
-                        backgroundColor: WidgetStatePropertyAll(
-                          const Color(0xff1a1a1a),
-                        )),
-                    icon: Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                Text(
-                  'Time Entry',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  style: ButtonStyle(
-                      iconColor: WidgetStatePropertyAll(Colors.white),
-                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10))),
-                      backgroundColor: WidgetStatePropertyAll(
-                        const Color(0xff1a1a1a),
-                      )),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
-                )
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                cursorColor: Colors.white,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Color(0xff1a1a1a),
-                  hintText: "Description ",
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xff1a1a1a),
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xff1a1a1a),
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextButton(
@@ -158,7 +84,7 @@ class _TimeEntrySheetState extends State<TimeEntrySheet> {
                   ),
                 ),
                 onPressed: () async {
-                  newStartTime = await _pickDateTime(DateTime.now());
+                  newStartTime = await pickDateTime(DateTime.now(), context);
                   print(newStartTime);
                   setState(() {});
 
@@ -211,44 +137,21 @@ class _TimeEntrySheetState extends State<TimeEntrySheet> {
                   ),
                 ),
                 onPressed: () async {
-                  newEndTime = await _pickDateTime(DateTime.now());
+                  newEndTime = await pickDateTime(DateTime.now(), context);
                   setState(() {});
 
                   // print(widget.timeEntry.endTime);
                 },
               ),
             ),
+            Expanded(
+                child: ListView.builder(
+                    itemCount: list.length,
+                    itemBuilder: (context, index) =>
+                        CategoryWidget(category: list[index])))
           ],
         ),
       ),
-    );
-  }
-
-  DateTime? selectedDateTime;
-
-  Future<DateTime> _pickDateTime(DateTime initialDate) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (date == null) return initialDate;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (time == null) return initialDate;
-
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
     );
   }
 }
