@@ -1,21 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/api_methods/fetch_time_entries.dart';
 import 'package:frontend/api_methods/post_time_entry.dart';
+import 'package:frontend/api_methods/update_time_entry.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:provider/provider.dart';
 
+// Add this import for your TimelogProvider
+// import 'package:frontend/providers/timelog_provider.dart';
+
 class UpdateTimeEntrySheet extends StatefulWidget {
-  const UpdateTimeEntrySheet({super.key, required this.timeEntry});
-  final TimeEntry timeEntry;
+  UpdateTimeEntrySheet({super.key, required this.timeEntry});
+  TimeEntry timeEntry;
+
   @override
   State<UpdateTimeEntrySheet> createState() => _TimeEntrySheetState();
 }
 
 class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
+  late DateTime newStartTime;
+  late DateTime newEndTime;
+  late String desc;
+  late TextEditingController descriptionController;
+  late int selectedCategoryId;
+  late String selectedCategoryName;
+  late DateTime originalDate; // Store original date for provider updates
+
+  @override
+  void initState() {
+    super.initState();
+    newStartTime = widget.timeEntry.startTime;
+    newEndTime = widget.timeEntry.endTime!;
+    desc = widget.timeEntry.description;
+    descriptionController = TextEditingController(text: desc);
+    selectedCategoryId = widget.timeEntry.categoryId ?? -1;
+    selectedCategoryName = widget.timeEntry.categoryName ?? 'Uncategorized';
+    originalDate = DateTime(
+      widget.timeEntry.startTime.year,
+      widget.timeEntry.startTime.month,
+      widget.timeEntry.startTime.day,
+    );
+  }
+
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    super.dispose();
+  }
+
   Widget buildGrabHandle(bool isDarkMode) {
     return Center(
       child: Container(
@@ -30,32 +66,11 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
     );
   }
 
-  late DateTime newStartTime;
-  late DateTime newEndTime;
-  late String desc;
-  late TextEditingController descriptionController;
-
-  @override
-  void initState() {
-    super.initState();
-    newStartTime = widget.timeEntry.startTime;
-    newEndTime = widget.timeEntry.endTime!;
-    desc = widget.timeEntry.description;
-    descriptionController = TextEditingController(text: desc);
-  }
-
-  @override
-  void dispose() {
-    descriptionController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    // Define colors based on theme using exact names from config
     final scaffoldColor = isDarkMode ? scaffoldColorDark : scaffoldColorLight;
     final cardColor =
         isDarkMode ? timeEntryWidgetColorDark : timeEntryWidgetColorLight;
@@ -102,25 +117,95 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final newEntry = TimeEntry(
-                      description: descriptionController.text,
-                      timeEntryId: widget.timeEntry.timeEntryId,
-                      userId: widget.timeEntry.userId,
-                      startTime: newStartTime,
-                      endTime: newEndTime,
-                      categoryId: widget.timeEntry.categoryId,
-                      categoryName: widget.timeEntry.categoryName,
-                    );
+                    final timelogProvider =
+                        Provider.of<TimelogProvider>(context, listen: false);
 
-                    // final success = await postTimeEntry(newEntry);
-                    final success = true;
+                    // Store original values for comparison
+                    final originalStartTime = widget.timeEntry.startTime;
+                    final originalEndTime = widget.timeEntry.endTime;
+                    final originalDescription = widget.timeEntry.description;
+                    final originalCategoryId = widget.timeEntry.categoryId;
+                    final originalCategoryName = widget.timeEntry.categoryName;
 
-                    if (success) {
-                      print("Posted successfully, now fetching entries...");
-                      Navigator.pop(context);
-                      // await fetchTimeEntries();
-                    } else {
-                      print("Failed to post entry.");
+                    // Update the time entry object
+                    widget.timeEntry.description = descriptionController.text;
+                    widget.timeEntry.startTime = newStartTime;
+                    widget.timeEntry.endTime = newEndTime;
+                    widget.timeEntry.categoryId = selectedCategoryId;
+                    widget.timeEntry.categoryName = selectedCategoryName;
+
+                    try {
+                      // Make API call to persist changes
+                      final success = await updateTimeEntry(widget.timeEntry);
+
+                      if (success) {
+                        // Check if the date changed (entry moved to different day)
+                        final newDate = DateTime(newStartTime.year,
+                            newStartTime.month, newStartTime.day);
+                        final oldDate = DateTime(originalStartTime.year,
+                            originalStartTime.month, originalStartTime.day);
+
+                        if (newDate != oldDate) {
+                          // Entry moved to a different day - remove from old date and add to new date
+
+                          // Remove from old date
+                          if (timelogProvider.map.containsKey(oldDate)) {
+                            timelogProvider.map[oldDate]?.removeWhere((entry) =>
+                                entry.timeEntryId ==
+                                    widget.timeEntry
+                                        .timeEntryId || // Use ID if available
+                                (entry.startTime == originalStartTime &&
+                                    entry.endTime == originalEndTime &&
+                                    entry.description == originalDescription));
+
+                            // Remove the date key if no entries left
+                            if (timelogProvider.map[oldDate]?.isEmpty == true) {
+                              timelogProvider.map.remove(oldDate);
+                            }
+                          }
+
+                          // Add to new date
+                          timelogProvider.addTimeEntry(
+                              newDate, widget.timeEntry);
+                        } else {
+                          // Entry stayed on same day - just notify listeners to refresh UI
+                          timelogProvider
+                              .sort(); // Re-sort in case time changed
+                          timelogProvider.notifyListeners();
+                        }
+
+                        Navigator.pop(context);
+
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Time entry updated successfully'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      } else {
+                        throw Exception('Failed to update entry');
+                      }
+                    } catch (e) {
+                      // Revert changes if API call failed
+                      widget.timeEntry.description = originalDescription;
+                      widget.timeEntry.startTime = originalStartTime;
+                      widget.timeEntry.endTime = originalEndTime;
+                      widget.timeEntry.categoryId = originalCategoryId;
+                      widget.timeEntry.categoryName = originalCategoryName;
+
+                      // Show error message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Failed to update time entry: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+
+                      print("Failed to update entry: $e");
                     }
                   },
                   style: ButtonStyle(
@@ -138,8 +223,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                 )
               ],
             ),
-
-            // Description Field
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
@@ -168,11 +251,19 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: CategoryPicker(
-                onCategorySelected: (cat) {},
+                initialCategoryName: selectedCategoryName,
+                onCategorySelected: (cat) {
+                  if (cat != null) {
+                    selectedCategoryId = cat.categoryId;
+                    selectedCategoryName = cat.name;
+                  } else {
+                    // Handle the case when no category is selected or category is cleared
+                    selectedCategoryId = -1;
+                    selectedCategoryName = 'Uncategorized';
+                  }
+                },
               ),
             ),
-
-            // Start Time Button
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -211,11 +302,9 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        'Start Time',
-                                        style: TextStyle(
-                                            color: hintColor, fontSize: 14),
-                                      ),
+                                      Text('Start Time',
+                                          style: TextStyle(
+                                              color: hintColor, fontSize: 14)),
                                       SizedBox(height: 4),
                                       Text(
                                         newStartTime
@@ -240,7 +329,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                         },
                       ),
                     ),
-                    // End Time Button
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextButton(
@@ -275,11 +363,9 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        'End Time',
-                                        style: TextStyle(
-                                            color: hintColor, fontSize: 14),
-                                      ),
+                                      Text('End Time',
+                                          style: TextStyle(
+                                              color: hintColor, fontSize: 14)),
                                       SizedBox(height: 4),
                                       Text(
                                         newEndTime.toString().substring(0, 16),
@@ -301,8 +387,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                         },
                       ),
                     ),
-
-                    // Duration Display
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
@@ -329,8 +413,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                 ),
               ),
             ),
-
-            // Category Picker
           ],
         ),
       ),
