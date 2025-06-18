@@ -35,9 +35,11 @@ class DayTimelineWidget extends StatelessWidget {
             physics: NeverScrollableScrollPhysics(),
             itemCount: list.length,
             itemBuilder: (context, index) {
-              return TimeEntryWidget(
-                timeEntry: list[index],
-              );
+              return list[index].endTime == null
+                  ? Text("")
+                  : TimeEntryWidget(
+                      timeEntry: list[index],
+                    );
             })
       ],
     );

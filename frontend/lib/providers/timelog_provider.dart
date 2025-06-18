@@ -11,6 +11,9 @@ class TimelogProvider with ChangeNotifier {
 
   Future<void> loadTimeEntries() async {
     map = await fetchTimeEntries();
+    for (final entry in map.entries) {
+      entry.value.sort((a, b) => b.startTime.compareTo(a.startTime));
+    }
     notifyListeners();
   }
 }
