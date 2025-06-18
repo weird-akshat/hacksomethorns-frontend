@@ -1,0 +1,12 @@
+Animations: 
+1. Added splash screen
+For this, i added animated_splash_screen in the pubspec.yaml file, and modified the main.dart file in order to display the splash screen
+There are two different splash screens, one for light mode and one for dark mode
+
+2. Analytics  screen
+Added animation into the analytics.dart file through the use of AnimationController in the analytics.dart file.
+The animation works in such a way that the pie chart building and row building finish in the same time, with the rows having the animation of swiping from bottom to top.
+
+3. App Logo
+Added a custom app logo
+Added flutter_launch_icons into the pubspec.yaml file, and ran the code once so that the custom image becomes the default app icon.
