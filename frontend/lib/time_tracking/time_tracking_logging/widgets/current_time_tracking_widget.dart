@@ -137,8 +137,9 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
                     final now = DateTime.now();
                     timeEntry.endTime = now;
 
-                    timeLogProvider.map.putIfAbsent(now, () => []);
-                    timeLogProvider.map[now]!.add(timeEntry);
+                    timeLogProvider.addTimeEntry(now, timeEntry);
+                    // timeLogProvider.map[now]!.add(timeEntry);
+                    timeLogProvider.sort();
 
                     await updateTimeEntry(timeEntry);
                     currentProvider.clearEntry();
