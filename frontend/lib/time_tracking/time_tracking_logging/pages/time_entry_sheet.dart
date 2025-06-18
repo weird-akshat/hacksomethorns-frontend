@@ -3,6 +3,7 @@ import 'package:frontend/api_methods/fetch_time_entries.dart';
 import 'package:frontend/api_methods/post_time_entry.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
 
 class TimeEntrySheet extends StatefulWidget {
   const TimeEntrySheet({super.key, required this.timeEntry});
@@ -244,6 +245,9 @@ class _TimeEntrySheetState extends State<TimeEntrySheet> {
                 },
               ),
             ),
+            CategoryPicker(
+              onCategorySelected: (cat) {},
+            )
           ],
         ),
       ),
