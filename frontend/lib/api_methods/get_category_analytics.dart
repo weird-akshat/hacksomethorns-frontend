@@ -1,0 +1,31 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+Future<Map<String, dynamic>?> getCategoryAnalytics({
+  required String userId,
+  required int categoryId,
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final String apiUrl = dotenv.env['API_URL']!;
+  final uri = Uri.parse(
+    "${apiUrl}api/users/$userId/categories/$categoryId/analytics/"
+    "?_startTime=${start.toIso8601String()}&_endTime=${end.toIso8601String()}",
+  );
+
+  try {
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Failed to fetch category analytics: ${response.statusCode}");
+      print("Response body: ${response.body}");
+      return null;
+    }
+  } catch (e) {
+    print("Error fetching category analytics: $e");
+    return null;
+  }
+}
