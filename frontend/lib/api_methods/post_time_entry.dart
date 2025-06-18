@@ -10,7 +10,7 @@ Future<bool> postTimeEntry(TimeEntry entry) async {
   final Map<String, dynamic> requestBody = {
     "description": entry.description,
     "start_time": entry.startTime.toUtc().toIso8601String(),
-    "end_time": entry.endTime.toUtc().toIso8601String(),
+    "end_time": entry.endTime?.toUtc().toIso8601String(),
     "category_id": entry.categoryId,
   };
 

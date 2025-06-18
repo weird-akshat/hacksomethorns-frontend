@@ -33,7 +33,7 @@ class _TimeEntrySheetState extends State<ShowcaseTimeEntrySheet> {
   void initState() {
     super.initState();
     newStartTime = widget.timeEntry.startTime;
-    newEndTime = widget.timeEntry.endTime;
+    newEndTime = widget.timeEntry.endTime!;
     desc = widget.timeEntry.description;
   }
 

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/api_methods/fetch_time_entries.dart';
+import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/widgets/current_time_tracking_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/day_timeline_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/timeline_widget.dart';
@@ -122,48 +124,9 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                   ),
                 );
               },
-              child: Container(
-                color: Colors.transparent,
-                height: MediaQuery.of(context).size.height * .125,
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Duration',
-                            style: TextStyle(
-                                color: themeProvider.isDarkMode
-                                    ? timeEntryWidgetTextColorDark
-                                    : timeEntryWidgetTextColorLight),
-                          ),
-                          Text('Description',
-                              style: TextStyle(
-                                  color: themeProvider.isDarkMode
-                                      ? timeEntryWidgetTextColorDark
-                                      : timeEntryWidgetTextColorLight)),
-                          Text('Category',
-                              style: TextStyle(
-                                  color: themeProvider.isDarkMode
-                                      ? timeEntryWidgetTextColorDark
-                                      : timeEntryWidgetTextColorLight)),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: CircleAvatar(
-                        radius: 30,
-                        child: Icon(Icons.pause),
-                      ),
-                    )
-                  ],
-                ),
+              child: CurrentTimeTrackingWidget(
+                themeProvider: themeProvider,
+                userId: "1",
               ),
             )
           ],
