@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/home.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => TimelogProvider()),
+          ChangeNotifierProvider(create: (_) => CategoryProvider())
         ],
         child: const MyApp(),
       ),

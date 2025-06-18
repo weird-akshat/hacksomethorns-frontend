@@ -1,9 +1,11 @@
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/date_time_picker_button.dart';
+import 'package:provider/provider.dart';
 
 class CategoryAnalytics extends StatefulWidget {
   const CategoryAnalytics({super.key});
@@ -15,7 +17,7 @@ class CategoryAnalytics extends StatefulWidget {
 class _CategoryAnalyticsState extends State<CategoryAnalytics> {
   late final newStartTime;
   late final newEndTime;
-  final List<Category> list = [
+  List<Category> list = [
     Category('user1', 1, 'Work', Colors.blue),
     Category('user1', 2, 'Study', Colors.green),
     Category('user1', 3, 'Exercise', Colors.red),
@@ -28,6 +30,16 @@ class _CategoryAnalyticsState extends State<CategoryAnalytics> {
     super.initState();
     newStartTime = DateTime.now();
     newEndTime = DateTime.now();
+
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
+    if (categoryProvider.isEmpty()) {
+      categoryProvider.loadCategories('1'); // pass actual user ID here
+    }
+    setState(() {
+      list = categoryProvider.list;
+      print(list);
+    });
   }
 
   @override
@@ -50,9 +62,11 @@ class _CategoryAnalyticsState extends State<CategoryAnalytics> {
                 child: DateTimePickerButton(text: "End Time")),
             Expanded(
                 child: ListView.builder(
-                    itemCount: list.length,
-                    itemBuilder: (context, index) =>
-                        CategoryWidget(category: list[index])))
+                    itemCount:
+                        Provider.of<CategoryProvider>(context).list.length,
+                    itemBuilder: (context, index) => CategoryWidget(
+                        category: Provider.of<CategoryProvider>(context)
+                            .list[index])))
           ],
         ),
       ),
