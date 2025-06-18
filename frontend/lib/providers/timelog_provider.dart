@@ -11,7 +11,6 @@ class TimelogProvider with ChangeNotifier {
 
   Future<void> loadTimeEntries() async {
     map = await fetchTimeEntries();
-
     notifyListeners();
   }
 }
