@@ -11,7 +11,7 @@ class CurrentTimeEntryProvider extends ChangeNotifier {
 
   Future<void> loadCurrentEntry(String userId) async {
     _currentEntry = await fetchCurrentTimeEntry(userId);
-    print(_currentEntry?.endTime);
+    print(_currentEntry?.duration);
     notifyListeners();
   }
 
