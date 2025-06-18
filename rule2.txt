@@ -1,0 +1,6 @@
+All the pages in the app have dark mode support.
+
+//yooo
+//the code for dark mode you can find in time-tracking-timelog-frontend branch, go in lib/provider/theme_provider
+//this theme provider essentially contains the current theme and makes it accessible for all the pages, but most specifically for main.dart where the main theme is decided
+//if you to lib/time_tracking/time_tracking_logging, you'll find a configuration.dart, this contains all the colors for light mode and dark mode for widgets that have their own color, since they are not dependent on the theme for their color, we have 2 colors for each widget, one for dark mode and one for light mode. For each of these widgets, they have a conditinal which checks which mode is currently active, and assigns color on that basis.
