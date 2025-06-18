@@ -40,4 +40,6 @@ class TimeEntry {
   set categoryName(String value) => _categoryName = value;
 
   Duration get duration => (_endTime ?? DateTime.now()).difference(_startTime);
+
+  // static Future<TimeEntry?> fromJson(Map<String, dynamic> responseData) {}
 }
