@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/api_methods/fetch_time_entries.dart';
+import 'package:frontend/api_methods/post_time_entry.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 
@@ -76,7 +77,25 @@ class _TimeEntrySheetState extends State<TimeEntrySheet> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await fetchTimeEntries();
+                    final newEntry = TimeEntry(
+                      description: "Work planning",
+                      timeEntryId: "", // leave empty or generate if needed
+                      userId: "1",
+                      startTime: DateTime.parse("2025-06-17T08:00:00Z"),
+                      endTime: DateTime.parse("2025-06-17T10:00:00Z"),
+                      categoryId: 1,
+                      categoryName:
+                          "Planning", // this won't be sent, just part of your model
+                    );
+
+                    final success = await postTimeEntry(newEntry);
+
+                    if (success) {
+                      print("Posted successfully, now fetching entries...");
+                      // await fetchTimeEntries();
+                    } else {
+                      print("Failed to post entry.");
+                    }
                   },
                   style: ButtonStyle(
                       iconColor: WidgetStatePropertyAll(Colors.white),
