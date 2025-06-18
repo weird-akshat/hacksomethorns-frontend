@@ -98,8 +98,10 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-                child:
-                    TimelineWidget(Provider.of<TimelogProvider>(context).map)),
+                child: Consumer<TimelogProvider>(
+                    builder: (context, timelogProvider, child) =>
+                        TimelineWidget(
+                            Provider.of<TimelogProvider>(context).map))),
             GestureDetector(
               onTap: () {
                 showModalBottomSheet(

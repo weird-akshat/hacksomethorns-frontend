@@ -20,11 +20,11 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
   @override
   Widget build(BuildContext context) {
     TextStyle style = TextStyle(
-        fontWeight: timeEntryWidgetFontweight,
-        color: Provider.of<ThemeProvider>(context).isDarkMode
-            ? timeEntryWidgetTextColorDark
-            : timeEntryWidgetTextColorLight,
-        overflow: TextOverflow.ellipsis);
+      fontWeight: timeEntryWidgetFontweight,
+      color: Provider.of<ThemeProvider>(context).isDarkMode
+          ? timeEntryWidgetTextColorDark
+          : timeEntryWidgetTextColorLight,
+    );
 
     return Padding(
       padding: const EdgeInsets.all(timeEntryWidgetPadding),
@@ -83,9 +83,13 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(widget.timeEntry.description,
+                              // overflow:
+                              // TextOverflow.ellipsis, // or .clip or .fade
+                              maxLines: 2,
                               style: style.copyWith(
-                                  fontSize: MediaQuery.of(context).size.height *
-                                      timeEntryWidgetDescriptionFontSize)),
+                                fontSize: MediaQuery.of(context).size.height *
+                                    timeEntryWidgetDescriptionFontSize,
+                              )),
                           (Text(
                               widget.timeEntry.duration
                                   .toString()
