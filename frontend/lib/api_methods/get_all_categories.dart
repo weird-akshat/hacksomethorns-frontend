@@ -12,13 +12,15 @@ Future<List<Category>> getAllCategories(String userId) async {
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body);
+      final List<dynamic> jsonList = jsonDecode(response.body)['results'];
+      print(jsonList);
+
       return jsonList.map((json) {
         return Category(
-          json['user_id'],
-          json['category_id'],
-          json['name'],
-          Color(int.parse(json['color'], radix: 16)).withOpacity(1.0),
+          userId.toString(),
+          json['_categoryId'] ?? 0,
+          json['_name'] ?? '',
+          (parseColor(json['_color'])),
         );
       }).toList();
     } else {
@@ -30,3 +32,15 @@ Future<List<Category>> getAllCategories(String userId) async {
     return [];
   }
 }
+
+Color parseColor(String? value) {
+  if (value == null) return const Color(0xFFCCCCCC); // default
+
+  try {
+    return Color(int.parse("0xff$value"));
+  } catch (_) {
+    return const Color(0xFFCCCCCC); // fallback if parsing fails
+  }
+}
+
+// Usage
