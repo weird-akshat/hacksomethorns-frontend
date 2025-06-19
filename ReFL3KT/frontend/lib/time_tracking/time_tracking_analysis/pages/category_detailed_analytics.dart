@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:frontend/api_methods/get_category_analytics.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/showcase_time_entry_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
+// import 'package:frontend/theme_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class CategoryDetailedAnalytics extends StatefulWidget {
@@ -73,42 +76,65 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "${widget.category.name} Report",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          if (isLoading)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: themeProvider.scaffoldColor,
+          appBar: AppBar(
+            title: Text(
+              "${widget.category.name} Report",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: themeProvider.textColor,
               ),
             ),
-        ],
-      ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+            backgroundColor: themeProvider.scaffoldColor,
+            iconTheme: IconThemeData(color: themeProvider.textColor),
+            centerTitle: true,
+            elevation: 0,
+            actions: [
+              if (isLoading)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        themeProvider.primaryAccent,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          body: SafeArea(
+            child: _buildBody(themeProvider),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ThemeProvider themeProvider) {
     if (isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                themeProvider.primaryAccent,
+              ),
+            ),
             SizedBox(height: 16),
             Text(
               'Loading analytics...',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+                color: themeProvider.textColor,
+              ),
             ),
           ],
         ),
@@ -137,6 +163,10 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: _fetchCategoryAnalytics,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeProvider.primaryAccent,
+                foregroundColor: Colors.white,
+              ),
               child: Text('Retry'),
             ),
           ],
@@ -145,18 +175,23 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     }
 
     // Main content when data is loaded
-    return _buildMainContent();
+    return _buildMainContent(themeProvider);
   }
 
-  Widget _buildMainContent() {
+  Widget _buildMainContent(ThemeProvider themeProvider) {
     if (categoryAnalyticsData == null) {
-      return Center(child: Text('No data available'));
+      return Center(
+        child: Text(
+          'No data available',
+          style: TextStyle(color: themeProvider.textColor),
+        ),
+      );
     }
 
     print('Category Analytics Data: $categoryAnalyticsData');
 
     // Prepare pie chart data from grouped_entries
-    final List<PieChartData> pieChartData = _preparePieChartData();
+    final List<PieChartData> pieChartData = _preparePieChartData(themeProvider);
     print('Pie Chart Data Length: ${pieChartData.length}');
 
     // Prepare bar chart data from daily_stats
@@ -167,10 +202,9 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     final List<TimeEntry> timeEntries = _prepareTimeEntries();
     print('Time Entries Length: ${timeEntries.length}');
 
-    return Center(
-        child: SingleChildScrollView(
+    return SingleChildScrollView(
       child: Container(
-        color: Colors.grey[50],
+        color: themeProvider.scaffoldColor,
         child: Column(
           children: [
             Padding(
@@ -180,11 +214,17 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 children: [
                   Text(
                     'Start Time: ${widget.startTime.toString().split(' ')[0]}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.textColor,
+                    ),
                   ),
                   Text(
                     'End Time: ${widget.endTime.toString().split(' ')[0]}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.textColor,
+                    ),
                   ),
                 ],
               ),
@@ -195,30 +235,47 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
               margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Card(
                 elevation: 3,
+                color: themeProvider.cardColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  side: BorderSide(
+                    color: themeProvider.borderColor,
+                    width: 1,
+                  ),
                 ),
-                color: Color.fromRGBO(8, 142, 255, 0.1),
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.timer,
-                        color: Color.fromRGBO(8, 142, 255, 1),
-                        size: 24,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Total Duration: ${_formatDurationString(categoryAnalyticsData!['total_duration'])}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Color.fromRGBO(8, 142, 255, 1),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.0),
+                    gradient: LinearGradient(
+                      colors: [
+                        themeProvider.primaryAccent.withOpacity(0.1),
+                        themeProvider.primaryAccent.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.timer,
+                          color: themeProvider.primaryAccent,
+                          size: 24,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 8),
+                        Text(
+                          'Total Duration: ${_formatDurationString(categoryAnalyticsData!['total_duration'])}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: themeProvider.primaryAccent,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -229,8 +286,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
               padding: const EdgeInsets.all(16.0),
               child: Card(
                 elevation: 3,
+                color: themeProvider.cardColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  side: BorderSide(
+                    color: themeProvider.borderColor,
+                    width: 1,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -241,14 +303,17 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                         children: [
                           Icon(
                             Icons.category,
-                            color: Color.fromRGBO(8, 142, 255, 1),
+                            color: themeProvider.primaryAccent,
                             size: 20,
                           ),
                           SizedBox(width: 8),
                           Text(
                             'Category: ${categoryAnalyticsData!['category']['_name']}',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: themeProvider.textColor,
+                            ),
                           ),
                         ],
                       ),
@@ -260,27 +325,36 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                             child: Container(
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.green[50],
+                                color: themeProvider.secondaryAccent
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: themeProvider.secondaryAccent
+                                      .withOpacity(0.3),
+                                ),
                               ),
                               child: Column(
                                 children: [
-                                  Icon(Icons.list_alt,
-                                      color: Colors.green[600], size: 20),
+                                  Icon(
+                                    Icons.list_alt,
+                                    color: themeProvider.secondaryAccent,
+                                    size: 20,
+                                  ),
                                   SizedBox(height: 4),
                                   Text(
                                     '${categoryAnalyticsData!['time_entries'].length}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Colors.green[600],
+                                      color: themeProvider.secondaryAccent,
                                     ),
                                   ),
                                   Text(
                                     'Total Entries',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.green[600],
+                                      color: themeProvider.textColor
+                                          .withOpacity(0.7),
                                     ),
                                   ),
                                 ],
@@ -292,27 +366,36 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                             child: Container(
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.orange[50],
+                                color:
+                                    themeProvider.subtleAccent.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: themeProvider.subtleAccent
+                                      .withOpacity(0.3),
+                                ),
                               ),
                               child: Column(
                                 children: [
-                                  Icon(Icons.group_work,
-                                      color: Colors.orange[600], size: 20),
+                                  Icon(
+                                    Icons.group_work,
+                                    color: themeProvider.subtleAccent,
+                                    size: 20,
+                                  ),
                                   SizedBox(height: 4),
                                   Text(
                                     '${categoryAnalyticsData!['grouped_entries'].length}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Colors.orange[600],
+                                      color: themeProvider.subtleAccent,
                                     ),
                                   ),
                                   Text(
                                     'Grouped Entries',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.orange[600],
+                                      color: themeProvider.textColor
+                                          .withOpacity(0.7),
                                     ),
                                   ),
                                 ],
@@ -332,7 +415,11 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
                 'Time Entry Distribution',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: themeProvider.textColor,
+                ),
               ),
             ),
             if (pieChartData.isNotEmpty)
@@ -341,13 +428,18 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 padding: EdgeInsets.all(16.0),
                 child: Card(
                   elevation: 4,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: SfCircularChart(
-                      backgroundColor: Colors.white,
+                      backgroundColor: themeProvider.cardColor,
                       legend: Legend(
                         isVisible: true,
                         overflowMode: LegendItemOverflowMode.wrap,
@@ -355,13 +447,16 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                         textStyle: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       tooltipBehavior: TooltipBehavior(
                         enable: true,
                         format: 'point.x: point.y minutes (point.percentage%)',
                         textStyle: TextStyle(
-                          color: Colors.white,
+                          color: themeProvider.isDarkMode
+                              ? Colors.white
+                              : Colors.black,
                           fontSize: 12,
                         ),
                       ),
@@ -383,16 +478,18 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                             textStyle: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
                             ),
                             connectorLineSettings: ConnectorLineSettings(
                               type: ConnectorType.curve,
                               length: '10%',
+                              color: themeProvider.textColor.withOpacity(0.5),
                             ),
                           ),
                           enableTooltip: true,
                           innerRadius: '40%',
                           radius: '80%',
-                          strokeColor: Colors.white,
+                          strokeColor: themeProvider.borderColor,
                           strokeWidth: 2,
                         )
                       ],
@@ -406,8 +503,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 margin: EdgeInsets.all(16.0),
                 child: Card(
                   elevation: 2,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Center(
                     child: Column(
@@ -416,13 +518,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                         Icon(
                           Icons.pie_chart_outline,
                           size: 48,
-                          color: Colors.grey[400],
+                          color: themeProvider.textColor.withOpacity(0.5),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'No pie chart data available',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: themeProvider.textColor.withOpacity(0.7),
                             fontSize: 16,
                           ),
                         ),
@@ -437,7 +539,11 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
                 'Daily Time Spent',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: themeProvider.textColor,
+                ),
               ),
             ),
             if (barChartData.isNotEmpty)
@@ -446,18 +552,24 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 padding: EdgeInsets.all(16.0),
                 child: Card(
                   elevation: 4,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: SfCartesianChart(
-                      backgroundColor: Colors.white,
+                      backgroundColor: themeProvider.cardColor,
                       plotAreaBorderWidth: 0,
                       primaryXAxis: CategoryAxis(
                         labelStyle: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
+                          color: themeProvider.textColor,
                         ),
                         majorGridLines: MajorGridLines(width: 0),
                         axisLine: AxisLine(width: 0),
@@ -470,23 +582,27 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                           textStyle: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            color: themeProvider.textColor,
                           ),
                         ),
                         majorGridLines: MajorGridLines(
                           width: 1,
-                          color: Colors.grey[300],
+                          color: themeProvider.borderColor.withOpacity(0.3),
                         ),
                         axisLine: AxisLine(width: 0),
                         labelStyle: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       tooltipBehavior: TooltipBehavior(
                         enable: true,
                         format: 'point.x: point.y minutes',
                         textStyle: TextStyle(
-                          color: Colors.white,
+                          color: themeProvider.isDarkMode
+                              ? Colors.white
+                              : Colors.black,
                           fontSize: 12,
                         ),
                         borderWidth: 0,
@@ -501,8 +617,8 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                           name: 'Time Spent',
                           gradient: LinearGradient(
                             colors: [
-                              Color.fromRGBO(8, 142, 255, 0.8),
-                              Color.fromRGBO(8, 142, 255, 1),
+                              themeProvider.primaryAccent.withOpacity(0.8),
+                              themeProvider.primaryAccent,
                             ],
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
@@ -513,7 +629,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                             textStyle: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: themeProvider.textColor,
                             ),
                           ),
                           borderRadius: BorderRadius.only(
@@ -533,8 +649,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 margin: EdgeInsets.all(16.0),
                 child: Card(
                   elevation: 2,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Center(
                     child: Column(
@@ -543,13 +664,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                         Icon(
                           Icons.bar_chart_outlined,
                           size: 48,
-                          color: Colors.grey[400],
+                          color: themeProvider.textColor.withOpacity(0.5),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'No bar chart data available',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: themeProvider.textColor.withOpacity(0.7),
                             fontSize: 16,
                           ),
                         ),
@@ -564,7 +685,11 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
                 'Time Entries (${timeEntries.length})',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: themeProvider.textColor,
+                ),
               ),
             ),
             if (timeEntries.isNotEmpty)
@@ -572,8 +697,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 margin: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Card(
                   elevation: 2,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: ListView.builder(
                     shrinkWrap: true,
@@ -585,7 +715,8 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                           border: index < timeEntries.length - 1
                               ? Border(
                                   bottom: BorderSide(
-                                    color: Colors.grey[200]!,
+                                    color: themeProvider.borderColor
+                                        .withOpacity(0.3),
                                     width: 1,
                                   ),
                                 )
@@ -603,8 +734,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 margin: EdgeInsets.all(16.0),
                 child: Card(
                   elevation: 2,
+                  color: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: themeProvider.borderColor,
+                      width: 1,
+                    ),
                   ),
                   child: Center(
                     child: Column(
@@ -613,13 +749,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                         Icon(
                           Icons.access_time,
                           size: 48,
-                          color: Colors.grey[400],
+                          color: themeProvider.textColor.withOpacity(0.5),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'No time entries available',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: themeProvider.textColor.withOpacity(0.7),
                             fontSize: 16,
                           ),
                         ),
@@ -631,10 +767,10 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
           ],
         ),
       ),
-    ));
+    );
   }
 
-  List<PieChartData> _preparePieChartData() {
+  List<PieChartData> _preparePieChartData(ThemeProvider themeProvider) {
     if (categoryAnalyticsData == null) {
       print('Category analytics data is null');
       return [];
@@ -649,18 +785,32 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       final totalMinutes = _parseDurationToMinutes(totalDurationString);
       print('Total minutes: $totalMinutes');
 
-      final colors = [
-        Colors.blue,
-        Colors.red,
-        Colors.green,
-        Colors.orange,
-        Colors.purple,
-        Colors.teal,
-        Colors.pink,
-        Colors.indigo,
-        Colors.amber,
-        Colors.cyan,
-      ];
+      // Theme-aware colors
+      final colors = themeProvider.isDarkMode
+          ? [
+              Color(0xFF4FC3F7), // Light Blue
+              Color(0xFFE57373), // Light Red
+              Color(0xFF81C784), // Light Green
+              Color(0xFFFFB74D), // Light Orange
+              Color(0xFFBA68C8), // Light Purple
+              Color(0xFF4DB6AC), // Light Teal
+              Color(0xFFF06292), // Light Pink
+              Color(0xFF7986CB), // Light Indigo
+              Color(0xFFFFD54F), // Light Amber
+              Color(0xFF4DD0E1), // Light Cyan
+            ]
+          : [
+              Color(0xFF1976D2), // Dark Blue
+              Color(0xFFD32F2F), // Dark Red
+              Color(0xFF388E3C), // Dark Green
+              Color(0xFFF57C00), // Dark Orange
+              Color(0xFF7B1FA2), // Dark Purple
+              Color(0xFF00695C), // Dark Teal
+              Color(0xFFC2185B), // Dark Pink
+              Color(0xFF303F9F), // Dark Indigo
+              Color(0xFFF57F17), // Dark Amber
+              Color(0xFF0097A7), // Dark Cyan
+            ];
 
       return groupedEntries.asMap().entries.map((entry) {
         final index = entry.key;

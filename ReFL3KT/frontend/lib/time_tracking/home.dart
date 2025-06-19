@@ -51,15 +51,15 @@ class _HomeState extends State<Home> {
                 });
               },
             ),
-            ListTile(
-              title: Text('Analytics'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  // currentWidgetPage = AnalyticsScreen();
-                });
-              },
-            ),
+            // ListTile(
+            //   title: Text('Analytics'),
+            //   onTap: () {
+            //     Navigator.of(context).pop();
+            //     setState(() {
+            //       // currentWidgetPage = AnalyticsScreen();
+            //     });
+            //   },
+            // ),
           ],
         ),
       ),
