@@ -26,6 +26,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
   late int selectedCategoryId;
   late String selectedCategoryName;
   late DateTime originalDate; // Store original date for provider updates
+  bool isLoading = false; // Add loading state
 
   @override
   void initState() {
@@ -105,9 +106,11 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                       backgroundColor: WidgetStatePropertyAll(cardColor),
                     ),
                     icon: Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          }),
                 Text(
                   'Time Entry',
                   style: TextStyle(
@@ -116,110 +119,147 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                       fontWeight: FontWeight.bold),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final timelogProvider =
-                        Provider.of<TimelogProvider>(context, listen: false);
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
 
-                    // Store original values for comparison
-                    final originalStartTime = widget.timeEntry.startTime;
-                    final originalEndTime = widget.timeEntry.endTime;
-                    final originalDescription = widget.timeEntry.description;
-                    final originalCategoryId = widget.timeEntry.categoryId;
-                    final originalCategoryName = widget.timeEntry.categoryName;
+                          final timelogProvider = Provider.of<TimelogProvider>(
+                              context,
+                              listen: false);
 
-                    // Update the time entry object
-                    widget.timeEntry.description = descriptionController.text;
-                    widget.timeEntry.startTime = newStartTime;
-                    widget.timeEntry.endTime = newEndTime;
-                    widget.timeEntry.categoryId = selectedCategoryId;
-                    widget.timeEntry.categoryName = selectedCategoryName;
+                          // Store original values for comparison
+                          final originalStartTime = widget.timeEntry.startTime;
+                          final originalEndTime = widget.timeEntry.endTime;
+                          final originalDescription =
+                              widget.timeEntry.description;
+                          final originalCategoryId =
+                              widget.timeEntry.categoryId;
+                          final originalCategoryName =
+                              widget.timeEntry.categoryName;
 
-                    try {
-                      // Make API call to persist changes
-                      final success = await updateTimeEntry(widget.timeEntry);
+                          // Update the time entry object
+                          widget.timeEntry.description =
+                              descriptionController.text;
+                          widget.timeEntry.startTime = newStartTime;
+                          widget.timeEntry.endTime = newEndTime;
+                          widget.timeEntry.categoryId = selectedCategoryId;
+                          widget.timeEntry.categoryName = selectedCategoryName;
 
-                      if (success) {
-                        // Check if the date changed (entry moved to different day)
-                        final newDate = DateTime(newStartTime.year,
-                            newStartTime.month, newStartTime.day);
-                        final oldDate = DateTime(originalStartTime.year,
-                            originalStartTime.month, originalStartTime.day);
+                          try {
+                            // Make API call to persist changes
+                            final success =
+                                await updateTimeEntry(widget.timeEntry);
 
-                        if (newDate != oldDate) {
-                          // Entry moved to a different day - remove from old date and add to new date
+                            if (success) {
+                              // Check if the date changed (entry moved to different day)
+                              final newDate = DateTime(newStartTime.year,
+                                  newStartTime.month, newStartTime.day);
+                              final oldDate = DateTime(
+                                  originalStartTime.year,
+                                  originalStartTime.month,
+                                  originalStartTime.day);
 
-                          // Remove from old date
-                          if (timelogProvider.map.containsKey(oldDate)) {
-                            timelogProvider.map[oldDate]?.removeWhere((entry) =>
-                                entry.timeEntryId ==
-                                    widget.timeEntry
-                                        .timeEntryId || // Use ID if available
-                                (entry.startTime == originalStartTime &&
-                                    entry.endTime == originalEndTime &&
-                                    entry.description == originalDescription));
+                              if (newDate != oldDate) {
+                                // Entry moved to a different day - remove from old date and add to new date
 
-                            // Remove the date key if no entries left
-                            if (timelogProvider.map[oldDate]?.isEmpty == true) {
-                              timelogProvider.map.remove(oldDate);
+                                // Remove from old date
+                                if (timelogProvider.map.containsKey(oldDate)) {
+                                  timelogProvider.map[oldDate]?.removeWhere(
+                                      (entry) =>
+                                          entry.timeEntryId ==
+                                              widget.timeEntry
+                                                  .timeEntryId || // Use ID if available
+                                          (entry.startTime ==
+                                                  originalStartTime &&
+                                              entry.endTime ==
+                                                  originalEndTime &&
+                                              entry.description ==
+                                                  originalDescription));
+
+                                  // Remove the date key if no entries left
+                                  if (timelogProvider.map[oldDate]?.isEmpty ==
+                                      true) {
+                                    timelogProvider.map.remove(oldDate);
+                                  }
+                                }
+
+                                // Add to new date
+                                timelogProvider.addTimeEntry(
+                                    newDate, widget.timeEntry);
+                              } else {
+                                // Entry stayed on same day - just notify listeners to refresh UI
+                                timelogProvider
+                                    .sort(); // Re-sort in case time changed
+                                timelogProvider.notifyListeners();
+                              }
+
+                              Navigator.pop(context);
+
+                              // Show success message
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Time entry updated successfully'),
+                                  backgroundColor: Colors.green,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              throw Exception('Failed to update entry');
+                            }
+                          } catch (e) {
+                            // Revert changes if API call failed
+                            widget.timeEntry.description = originalDescription;
+                            widget.timeEntry.startTime = originalStartTime;
+                            widget.timeEntry.endTime = originalEndTime;
+                            widget.timeEntry.categoryId = originalCategoryId;
+                            widget.timeEntry.categoryName =
+                                originalCategoryName;
+
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Failed to update time entry: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+
+                            print("Failed to update entry: $e");
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                isLoading = false;
+                              });
                             }
                           }
-
-                          // Add to new date
-                          timelogProvider.addTimeEntry(
-                              newDate, widget.timeEntry);
-                        } else {
-                          // Entry stayed on same day - just notify listeners to refresh UI
-                          timelogProvider
-                              .sort(); // Re-sort in case time changed
-                          timelogProvider.notifyListeners();
-                        }
-
-                        Navigator.pop(context);
-
-                        // Show success message
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Time entry updated successfully'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      } else {
-                        throw Exception('Failed to update entry');
-                      }
-                    } catch (e) {
-                      // Revert changes if API call failed
-                      widget.timeEntry.description = originalDescription;
-                      widget.timeEntry.startTime = originalStartTime;
-                      widget.timeEntry.endTime = originalEndTime;
-                      widget.timeEntry.categoryId = originalCategoryId;
-                      widget.timeEntry.categoryName = originalCategoryName;
-
-                      // Show error message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Failed to update time entry: ${e.toString()}'),
-                          backgroundColor: Colors.red,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-
-                      print("Failed to update entry: $e");
-                    }
-                  },
+                        },
                   style: ButtonStyle(
                     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10))),
                     backgroundColor: WidgetStatePropertyAll(cardColor),
                   ),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                        color: textColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(accentColor),
+                          ),
+                        )
+                      : Text(
+                          'Save',
+                          style: TextStyle(
+                              color: textColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold),
+                        ),
                 )
               ],
             ),
@@ -229,6 +269,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                 controller: descriptionController,
                 cursorColor: accentColor,
                 style: TextStyle(color: textColor),
+                enabled: !isLoading, // Disable input when loading
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: cardColor,
@@ -240,6 +281,10 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: accentColor),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: borderColor.withOpacity(0.5)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -323,11 +368,13 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: () async {
-                          newStartTime =
-                              await pickDateTime(newStartTime, context);
-                          setState(() {});
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                newStartTime =
+                                    await pickDateTime(newStartTime, context);
+                                setState(() {});
+                              },
                       ),
                     ),
                     Padding(
@@ -382,10 +429,13 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: () async {
-                          newEndTime = await pickDateTime(newEndTime, context);
-                          setState(() {});
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                newEndTime =
+                                    await pickDateTime(newEndTime, context);
+                                setState(() {});
+                              },
                       ),
                     ),
                     Padding(

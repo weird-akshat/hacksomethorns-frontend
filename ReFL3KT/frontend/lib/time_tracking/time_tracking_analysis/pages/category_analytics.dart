@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
@@ -146,19 +147,28 @@ class _CategoryAnalyticsState extends State<CategoryAnalytics> {
             _dateSelector("Start Date", newStartTime, true),
             _dateSelector("End Date", newEndTime, false),
             Expanded(
-              child: ListView.builder(
-                itemCount: categories.length,
-                itemBuilder: (context, index) => GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CategoryDetailedAnalytics(
-                        category: categories[index],
-                        endTime: newEndTime,
-                        startTime: newStartTime,
+              child: AnimationLimiter(
+                child: ListView.builder(
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) =>
+                      AnimationConfiguration.staggeredList(
+                    position: index,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => CategoryDetailedAnalytics(
+                            category: categories[index],
+                            endTime: newEndTime,
+                            startTime: newStartTime,
+                          ),
+                        ));
+                      },
+                      child: SlideAnimation(
+                        child: FadeInAnimation(
+                            child: CategoryWidget(category: categories[index])),
                       ),
-                    ));
-                  },
-                  child: CategoryWidget(category: categories[index]),
+                    ),
+                  ),
                 ),
               ),
             ),

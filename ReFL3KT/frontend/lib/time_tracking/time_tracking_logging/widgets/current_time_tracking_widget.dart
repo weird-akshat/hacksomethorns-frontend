@@ -27,6 +27,7 @@ class CurrentTimeTrackingWidget extends StatefulWidget {
 class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
   late TimeEntry? timeEntry;
   bool isTracking = false;
+  bool isLoading = false; // Add loading state
   Timer? _timer;
 
   @override
@@ -130,24 +131,40 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
               ),
               if (isTracking && timeEntry != null)
                 ElevatedButton(
-                  onPressed: () async {
-                    final currentProvider =
-                        Provider.of<CurrentTimeEntryProvider>(context,
-                            listen: false);
-                    final timeLogProvider =
-                        Provider.of<TimelogProvider>(context, listen: false);
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true; // Set loading to true
+                          });
 
-                    final now = DateTime.now();
-                    timeEntry.endTime = now;
+                          try {
+                            final currentProvider =
+                                Provider.of<CurrentTimeEntryProvider>(context,
+                                    listen: false);
+                            final timeLogProvider =
+                                Provider.of<TimelogProvider>(context,
+                                    listen: false);
 
-                    timeLogProvider.addTimeEntry(now, timeEntry);
-                    // timeLogProvider.map[now]!.add(timeEntry);
-                    timeLogProvider.sort();
-                    // currentProvider.clearEntry();
+                            final now = DateTime.now();
+                            timeEntry.endTime = now;
 
-                    await updateTimeEntry(timeEntry);
-                    currentProvider.clearEntry();
-                  },
+                            timeLogProvider.addTimeEntry(now, timeEntry);
+                            timeLogProvider.sort();
+
+                            await updateTimeEntry(timeEntry);
+                            currentProvider.clearEntry();
+                          } catch (e) {
+                            // Handle error if needed
+                            print('Error updating time entry: $e');
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                isLoading = false; // Set loading to false
+                              });
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(16),
@@ -155,7 +172,16 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
                         ? Colors.blueGrey[700]
                         : Colors.blue,
                   ),
-                  child: const Icon(Icons.pause, color: Colors.white, size: 28),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Icon(Icons.pause, color: Colors.white, size: 28),
                 )
             ],
           ),

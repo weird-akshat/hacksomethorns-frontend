@@ -11,18 +11,30 @@ class TimelogProvider with ChangeNotifier {
   }
 
   void sort() {
-    // Sort the inner lists
+    final newMap = <DateTime, List<TimeEntry>>{};
+
     for (final entry in map.entries) {
+      for (final timeEntry in entry.value) {
+        final actualDate = normalizeDate(timeEntry.startTime);
+        newMap.putIfAbsent(actualDate, () => []);
+        newMap[actualDate]!.add(timeEntry);
+      }
+    }
+
+    // Sort each day's entries by descending startTime
+    for (final entry in newMap.entries) {
       entry.value.sort((a, b) => b.startTime.compareTo(a.startTime));
     }
 
-    // Sort the map by keys in descending order
-    final sortedEntries = map.entries.toList()
+    // Sort the map keys in descending order
+    final sortedEntries = newMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
 
     map = {
       for (final entry in sortedEntries) entry.key: entry.value,
     };
+
+    notifyListeners();
   }
 
   DateTime normalizeDate(DateTime date) {
