@@ -13,6 +13,7 @@ Future<TimeEntry?> postTimeEntry(TimeEntry entry) async {
     "end_time": entry.endTime?.toUtc().toIso8601String(),
     "category_id": entry.categoryId,
   };
+  print(requestBody);
 
   print('API Request Body: ${jsonEncode(requestBody)}');
 
