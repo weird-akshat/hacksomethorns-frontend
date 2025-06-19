@@ -81,22 +81,18 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
 
   Future<void> _exportChartsToPdf() async {
     try {
-      // Capture Pie Chart as image
       final ui.Image? pieImage =
           await _pieChartKey.currentState?.toImage(pixelRatio: 3.0);
       final ByteData? pieBytes =
           await pieImage?.toByteData(format: ui.ImageByteFormat.png);
 
-      // Capture Bar Chart as image
       final ui.Image? barImage =
           await _barChartKey.currentState?.toImage(pixelRatio: 3.0);
       final ByteData? barBytes =
           await barImage?.toByteData(format: ui.ImageByteFormat.png);
 
-      // Create PDF document
       final PdfDocument document = PdfDocument();
 
-      // --- Page 1: Pie Chart ---
       final PdfPage piePage = document.pages.add();
       final PdfGraphics pieGraphics = piePage.graphics;
       pieGraphics.drawString(
@@ -109,7 +105,6 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
             Rect.fromLTWH(0, 60, piePage.getClientSize().width, 300));
       }
 
-      // --- Page 2: Bar Chart ---
       final PdfPage barPage = document.pages.add();
       final PdfGraphics barGraphics = barPage.graphics;
       barGraphics.drawString('${widget.category.name} - Daily Time Spent',
