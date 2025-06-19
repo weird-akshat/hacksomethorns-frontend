@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 
 class DateTimePickerButton extends StatefulWidget {
-  const DateTimePickerButton({super.key, required this.text});
+  const DateTimePickerButton({
+    super.key,
+    required this.text,
+    required this.onDateTimePicked,
+  });
 
   final String text;
+  final void Function(DateTime) onDateTimePicked;
 
   @override
   State<DateTimePickerButton> createState() => _DateTimePickerButtonState();
 }
 
 class _DateTimePickerButtonState extends State<DateTimePickerButton> {
-  // get newStartTime => null;
-
   late DateTime time;
-  // late DateTime endTime;
+
   @override
   void initState() {
     super.initState();
@@ -25,12 +28,19 @@ class _DateTimePickerButtonState extends State<DateTimePickerButton> {
   Widget build(BuildContext context) {
     return TextButton(
       style: ButtonStyle(
-          iconColor: WidgetStatePropertyAll(Colors.white),
-          shape: WidgetStatePropertyAll(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-          backgroundColor: WidgetStatePropertyAll(
-            const Color.fromARGB(255, 134, 129, 129),
-          )),
+        iconColor: const WidgetStatePropertyAll(Colors.white),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        backgroundColor: const WidgetStatePropertyAll(
+          Color.fromARGB(255, 134, 129, 129),
+        ),
+      ),
+      onPressed: () async {
+        time = await pickDateTime(DateTime.now(), context);
+        setState(() {});
+        widget.onDateTimePicked(time); // Return the picked time
+      },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: SizedBox(
@@ -40,10 +50,11 @@ class _DateTimePickerButtonState extends State<DateTimePickerButton> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                  height: 30,
-                  width: 30,
-                  color: Colors.grey,
-                  child: Icon(Icons.play_arrow)),
+                height: 30,
+                width: 30,
+                color: Colors.grey,
+                child: const Icon(Icons.play_arrow),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
                 child: Column(
@@ -52,11 +63,11 @@ class _DateTimePickerButtonState extends State<DateTimePickerButton> {
                   children: [
                     Text(
                       widget.text,
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                     Text(
                       time.toString().substring(0, 16),
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.grey),
                     )
                   ],
                 ),
@@ -65,13 +76,6 @@ class _DateTimePickerButtonState extends State<DateTimePickerButton> {
           ),
         ),
       ),
-      onPressed: () async {
-        time = await pickDateTime(DateTime.now(), context);
-        // print(time);
-        setState(() {});
-
-        // print(widget.timeEntry.startTime);
-      },
     );
   }
 }

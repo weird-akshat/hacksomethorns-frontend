@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/api_methods/fetch_time_entries.dart';
+import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
@@ -27,6 +28,11 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
   @override
   void initState() {
     super.initState();
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
+    if (categoryProvider.isEmpty()) {
+      categoryProvider.loadCategories('1'); // pass actual user ID here
+    }
 
     final timelogProvider =
         Provider.of<TimelogProvider>(context, listen: false);
