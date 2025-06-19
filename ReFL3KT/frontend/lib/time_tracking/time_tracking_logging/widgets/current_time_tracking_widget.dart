@@ -44,7 +44,10 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
 
   void _startPeriodicUpdate() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && isTracking && timeEntry != null) {
+      if (!mounted) return;
+
+      final provider = context.read<CurrentTimeEntryProvider>();
+      if (provider.isTracking && provider.currentEntry != null) {
         setState(() {});
       }
     });
@@ -140,6 +143,7 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
                     timeLogProvider.addTimeEntry(now, timeEntry);
                     // timeLogProvider.map[now]!.add(timeEntry);
                     timeLogProvider.sort();
+                    // currentProvider.clearEntry();
 
                     await updateTimeEntry(timeEntry);
                     currentProvider.clearEntry();

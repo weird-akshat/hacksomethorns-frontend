@@ -168,7 +168,9 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     print('Time Entries Length: ${timeEntries.length}');
 
     return Center(
-      child: SingleChildScrollView(
+        child: SingleChildScrollView(
+      child: Container(
+        color: Colors.grey[50],
         child: Column(
           children: [
             Padding(
@@ -177,36 +179,148 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                      'Start Time: ${widget.startTime.toString().split(' ')[0]}'),
-                  Text('End Time: ${widget.endTime.toString().split(' ')[0]}'),
+                    'Start Time: ${widget.startTime.toString().split(' ')[0]}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'End Time: ${widget.endTime.toString().split(' ')[0]}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
 
             // Display total duration from API data
-            Text(
-              'Total Duration: ${categoryAnalyticsData!['total_duration']}',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                color: Color.fromRGBO(8, 142, 255, 0.1),
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.timer,
+                        color: Color.fromRGBO(8, 142, 255, 1),
+                        size: 24,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Total Duration: ${_formatDurationString(categoryAnalyticsData!['total_duration'])}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Color.fromRGBO(8, 142, 255, 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
 
             // Show API data summary
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Category: ${categoryAnalyticsData!['category']['_name']}',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.category,
+                            color: Color.fromRGBO(8, 142, 255, 1),
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Category: ${categoryAnalyticsData!['category']['_name']}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                          'Total Entries: ${categoryAnalyticsData!['time_entries'].length}'),
-                      Text(
-                          'Grouped Entries: ${categoryAnalyticsData!['grouped_entries'].length}'),
+                      SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.list_alt,
+                                      color: Colors.green[600], size: 20),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '${categoryAnalyticsData!['time_entries'].length}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Total Entries',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.group_work,
+                                      color: Colors.orange[600], size: 20),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '${categoryAnalyticsData!['grouped_entries'].length}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.orange[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Grouped Entries',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.orange[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -214,102 +328,310 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
             ),
 
             // Pie Chart for grouped entries
-            Text(
-              'Time Entry Distribution',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Time Entry Distribution',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
             ),
             if (pieChartData.isNotEmpty)
-              SfCircularChart(
-                legend: Legend(
-                  isVisible: true,
-                  overflowMode: LegendItemOverflowMode.wrap,
-                ),
-                series: <CircularSeries>[
-                  PieSeries<PieChartData, String>(
-                    dataSource: pieChartData,
-                    pointColorMapper: (PieChartData data, _) => data.color,
-                    xValueMapper: (PieChartData data, _) => data.description,
-                    yValueMapper: (PieChartData data, _) =>
-                        data.durationInMinutes,
-                    dataLabelMapper: (PieChartData data, _) =>
-                        '${data.percentage.toStringAsFixed(1)}%',
-                    dataLabelSettings: DataLabelSettings(
-                      isVisible: true,
-                      labelPosition: ChartDataLabelPosition.outside,
+              Container(
+                height: 400,
+                padding: EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: SfCircularChart(
+                      backgroundColor: Colors.white,
+                      legend: Legend(
+                        isVisible: true,
+                        overflowMode: LegendItemOverflowMode.wrap,
+                        position: LegendPosition.bottom,
+                        textStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      tooltipBehavior: TooltipBehavior(
+                        enable: true,
+                        format: 'point.x: point.y minutes (point.percentage%)',
+                        textStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                      series: <CircularSeries>[
+                        DoughnutSeries<PieChartData, String>(
+                          dataSource: pieChartData,
+                          pointColorMapper: (PieChartData data, _) =>
+                              data.color,
+                          xValueMapper: (PieChartData data, _) =>
+                              data.description,
+                          yValueMapper: (PieChartData data, _) =>
+                              data.durationInMinutes,
+                          dataLabelMapper: (PieChartData data, _) =>
+                              '${data.percentage.toStringAsFixed(1)}%',
+                          dataLabelSettings: DataLabelSettings(
+                            isVisible: true,
+                            labelPosition: ChartDataLabelPosition.outside,
+                            useSeriesColor: true,
+                            textStyle: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            connectorLineSettings: ConnectorLineSettings(
+                              type: ConnectorType.curve,
+                              length: '10%',
+                            ),
+                          ),
+                          enableTooltip: true,
+                          innerRadius: '40%',
+                          radius: '80%',
+                          strokeColor: Colors.white,
+                          strokeWidth: 2,
+                        )
+                      ],
                     ),
-                    enableTooltip: true,
-                  )
-                ],
+                  ),
+                ),
               )
             else
               Container(
                 height: 200,
-                child: Center(
-                  child: Text('No pie chart data available'),
+                margin: EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.pie_chart_outline,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No pie chart data available',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
             // Bar Chart for daily stats
-            Text(
-              'Daily Time Spent',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Daily Time Spent',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
             ),
             if (barChartData.isNotEmpty)
-              SfCartesianChart(
-                primaryXAxis: CategoryAxis(),
-                primaryYAxis: NumericAxis(
-                  labelFormat: '{value} min',
-                  title: AxisTitle(text: 'Time (minutes)'),
-                ),
-                tooltipBehavior: _tooltip,
-                series: <CartesianSeries<BarChartData, String>>[
-                  BarSeries<BarChartData, String>(
-                    dataSource: barChartData,
-                    xValueMapper: (BarChartData data, _) => data.date,
-                    yValueMapper: (BarChartData data, _) =>
-                        data.durationInMinutes,
-                    name: 'Time Spent',
-                    color: Color.fromRGBO(8, 142, 255, 1),
-                    dataLabelSettings: DataLabelSettings(
-                      isVisible: true,
-                      labelAlignment: ChartDataLabelAlignment.top,
+              Container(
+                height: 350,
+                padding: EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: SfCartesianChart(
+                      backgroundColor: Colors.white,
+                      plotAreaBorderWidth: 0,
+                      primaryXAxis: CategoryAxis(
+                        labelStyle: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        majorGridLines: MajorGridLines(width: 0),
+                        axisLine: AxisLine(width: 0),
+                        labelRotation: -45,
+                      ),
+                      primaryYAxis: NumericAxis(
+                        labelFormat: '{value} min',
+                        title: AxisTitle(
+                          text: 'Time (minutes)',
+                          textStyle: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        majorGridLines: MajorGridLines(
+                          width: 1,
+                          color: Colors.grey[300],
+                        ),
+                        axisLine: AxisLine(width: 0),
+                        labelStyle: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      tooltipBehavior: TooltipBehavior(
+                        enable: true,
+                        format: 'point.x: point.y minutes',
+                        textStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        borderWidth: 0,
+                        elevation: 3,
+                      ),
+                      series: <CartesianSeries<BarChartData, String>>[
+                        ColumnSeries<BarChartData, String>(
+                          dataSource: barChartData,
+                          xValueMapper: (BarChartData data, _) => data.date,
+                          yValueMapper: (BarChartData data, _) =>
+                              data.durationInMinutes,
+                          name: 'Time Spent',
+                          gradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(8, 142, 255, 0.8),
+                              Color.fromRGBO(8, 142, 255, 1),
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          dataLabelSettings: DataLabelSettings(
+                            isVisible: true,
+                            labelAlignment: ChartDataLabelAlignment.top,
+                            textStyle: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(4),
+                            topRight: Radius.circular(4),
+                          ),
+                          spacing: 0.2,
+                        )
+                      ],
                     ),
-                  )
-                ],
+                  ),
+                ),
               )
             else
               Container(
                 height: 200,
-                child: Center(
-                  child: Text('No bar chart data available'),
+                margin: EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.bar_chart_outlined,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No bar chart data available',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
             // Time entries list
-            Text(
-              'Time Entries (${timeEntries.length})',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Time Entries (${timeEntries.length})',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
             ),
             if (timeEntries.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: timeEntries.length,
-                itemBuilder: (context, index) {
-                  return ShowcaseTimeEntryWidget(timeEntry: timeEntries[index]);
-                },
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: timeEntries.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: index < timeEntries.length - 1
+                              ? Border(
+                                  bottom: BorderSide(
+                                    color: Colors.grey[200]!,
+                                    width: 1,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        child: TimeEntryWidget(timeEntry: timeEntries[index]),
+                      );
+                    },
+                  ),
+                ),
               )
             else
               Container(
-                height: 100,
-                child: Center(
-                  child: Text('No time entries available'),
+                height: 120,
+                margin: EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No time entries available',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],
         ),
       ),
-    );
+    ));
   }
 
   List<PieChartData> _preparePieChartData() {
@@ -385,7 +707,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
 
         return BarChartData(
           date: date,
-          durationInMinutes: durationInMinutes,
+          durationInMinutes: durationInMinutes.toInt(),
         );
       }).toList();
     } catch (e) {
@@ -426,7 +748,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
   }
 
   double _parseDurationToMinutes(String duration) {
-    // Parse duration string like "0:43:31.438333" to minutes
+    // Parse duration string like "0:43:31.438333" to minutes (ignoring milliseconds)
     print('Parsing duration: $duration');
 
     try {
@@ -434,8 +756,9 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       if (parts.length >= 3) {
         final hours = int.tryParse(parts[0]) ?? 0;
         final minutes = int.tryParse(parts[1]) ?? 0;
-        final secondsParts = parts[2].split('.');
-        final seconds = int.tryParse(secondsParts[0]) ?? 0;
+        // Only take the seconds part before the decimal point
+        final secondsPart = parts[2].split('.')[0];
+        final seconds = int.tryParse(secondsPart) ?? 0;
 
         final totalMinutes = (hours * 60) + minutes + (seconds / 60);
         print('Parsed duration: $totalMinutes minutes');
@@ -446,6 +769,23 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     }
 
     return 0.0;
+  }
+
+  String _formatDurationString(String duration) {
+    // Format duration string to show only up to seconds (no milliseconds)
+    try {
+      final parts = duration.split(':');
+      if (parts.length >= 3) {
+        final hours = parts[0];
+        final minutes = parts[1];
+        // Only take the seconds part before the decimal point
+        final secondsPart = parts[2].split('.')[0];
+        return '$hours:$minutes:$secondsPart';
+      }
+    } catch (e) {
+      print('Error formatting duration: $e');
+    }
+    return duration; // Return original if parsing fails
   }
 }
 
@@ -477,5 +817,5 @@ class BarChartData {
   });
 
   final String date;
-  final double durationInMinutes;
+  final int durationInMinutes;
 }

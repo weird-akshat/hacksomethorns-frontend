@@ -308,6 +308,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                                       SizedBox(height: 4),
                                       Text(
                                         newStartTime
+                                            .toLocal()
                                             .toString()
                                             .substring(0, 16),
                                         style: TextStyle(

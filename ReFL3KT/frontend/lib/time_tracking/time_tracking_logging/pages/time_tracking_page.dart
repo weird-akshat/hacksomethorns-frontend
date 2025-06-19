@@ -7,7 +7,6 @@ import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/new_time_entry_sheet.dart';
-// import 'package:frontend/time_tracking/pages/configuration.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/update_time_entry_sheet.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/current_time_tracking_widget.dart';
@@ -25,13 +24,12 @@ class TimeTrackingPage extends StatefulWidget {
 
 class _TimeTrackingPageState extends State<TimeTrackingPage> {
   @override
-  @override
   void initState() {
     super.initState();
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.isEmpty()) {
-      categoryProvider.loadCategories('1'); // pass actual user ID here
+      categoryProvider.loadCategories('1'); // use actual user ID
     }
 
     final timelogProvider =
@@ -42,15 +40,15 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
 
     final currentEntryProvider =
         Provider.of<CurrentTimeEntryProvider>(context, listen: false);
-    currentEntryProvider.loadCurrentEntry("1"); // or widget.userId
+    currentEntryProvider.loadCurrentEntry("1"); // use actual user ID
   }
 
   @override
   Widget build(BuildContext context) {
-    var themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentEntryProvider = Provider.of<CurrentTimeEntryProvider>(context);
+
     return Scaffold(
-      // backgroundColor: scaffoldColor,
-      // bottomSheet: Container(),
       appBar: AppBar(
         actions: [
           Padding(
@@ -60,11 +58,11 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
-                  shape: RoundedRectangleBorder(
+                  shape: const RoundedRectangleBorder(
                     borderRadius:
                         BorderRadius.vertical(top: Radius.circular(25)),
                   ),
-                  builder: (context) => FractionallySizedBox(
+                  builder: (context) => const FractionallySizedBox(
                     heightFactor: 0.6,
                     child: NewTimeEntrySheet(),
                   ),
@@ -82,19 +80,18 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
             icon: Icon(
                 themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
             onPressed: () {
-              themeProvider
-                  .toggleTheme(); // no value passed, it toggles internally
+              themeProvider.toggleTheme();
             },
           )
         ],
-        // backgroundColor: scaffoldColor,
         title: Text(
           'Timer',
           style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: themeProvider.isDarkMode
-                  ? timeEntryWidgetTextColorDark
-                  : timeEntryWidgetTextColorLight),
+            fontWeight: FontWeight.bold,
+            color: themeProvider.isDarkMode
+                ? timeEntryWidgetTextColorDark
+                : timeEntryWidgetTextColorLight,
+          ),
         ),
       ),
       body: SafeArea(
@@ -102,29 +99,28 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-                child: Consumer<TimelogProvider>(
-                    builder: (context, timelogProvider, child) =>
-                        TimelineWidget(
-                            Provider.of<TimelogProvider>(context).map))),
+              child: Consumer<TimelogProvider>(
+                builder: (context, timelogProvider, child) =>
+                    TimelineWidget(timelogProvider.map),
+              ),
+            ),
             GestureDetector(
               onTap: () {
-                final currentEntry = Provider.of<CurrentTimeEntryProvider>(
-                        context,
-                        listen: false)
-                    .currentEntry;
+                final isTracking = currentEntryProvider.isTracking;
+                final currentEntry = currentEntryProvider.currentEntry;
 
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
-                  shape: RoundedRectangleBorder(
+                  shape: const RoundedRectangleBorder(
                     borderRadius:
                         BorderRadius.vertical(top: Radius.circular(25)),
                   ),
                   builder: (context) => FractionallySizedBox(
                     heightFactor: 0.6,
-                    child: currentEntry == null
-                        ? NewTimeEntrySheet()
-                        : UpdateTimeEntrySheet(timeEntry: currentEntry),
+                    child: isTracking && currentEntry != null
+                        ? UpdateTimeEntrySheet(timeEntry: currentEntry)
+                        : const NewTimeEntrySheet(),
                   ),
                 );
               },
