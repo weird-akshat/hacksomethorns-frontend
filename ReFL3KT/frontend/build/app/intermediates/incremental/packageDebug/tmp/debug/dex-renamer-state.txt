@@ -1,0 +1,16 @@
+#Thu Jun 19 17:24:34 IST 2025
+base.0=/home/weird_akshat_/dev/ReFL3KT/Mangoes/ReFL3KT/frontend/build/app/intermediates/dex/debug/mergeExtDexDebug/classes.dex
+base.1=/home/weird_akshat_/dev/ReFL3KT/Mangoes/ReFL3KT/frontend/build/app/intermediates/dex/debug/mergeLibDexDebug/0/classes.dex
+base.2=/home/weird_akshat_/dev/ReFL3KT/Mangoes/ReFL3KT/frontend/build/app/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
+base.3=/home/weird_akshat_/dev/ReFL3KT/Mangoes/ReFL3KT/frontend/build/app/intermediates/dex/debug/mergeProjectDexDebug/1/classes.dex
+base.4=/home/weird_akshat_/dev/ReFL3KT/Mangoes/ReFL3KT/frontend/build/app/intermediates/dex/debug/mergeProjectDexDebug/2/classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+path.2=0/classes.dex
+path.3=1/classes.dex
+path.4=2/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex
+renamed.3=classes4.dex
+renamed.4=classes5.dex
