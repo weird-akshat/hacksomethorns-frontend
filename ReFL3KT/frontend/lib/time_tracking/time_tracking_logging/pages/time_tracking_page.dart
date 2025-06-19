@@ -63,21 +63,22 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
               onTap: () {
                 final isTracking = currentEntryProvider.isTracking;
                 final currentEntry = currentEntryProvider.currentEntry;
-
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(25)),
-                  ),
-                  builder: (context) => FractionallySizedBox(
-                    heightFactor: 0.6,
-                    child: isTracking && currentEntry != null
-                        ? UpdateTimeEntrySheet(timeEntry: currentEntry)
-                        : const NewTimeEntrySheet(),
-                  ),
-                );
+                isTracking && currentEntry != null
+                    ? SizedBox()
+                    : showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(25)),
+                        ),
+                        builder: (context) => FractionallySizedBox(
+                          heightFactor: 0.6,
+                          child: isTracking && currentEntry != null
+                              ? SizedBox()
+                              : const NewTimeEntrySheet(),
+                        ),
+                      );
               },
               child: CurrentTimeTrackingWidget(
                 themeProvider: themeProvider,

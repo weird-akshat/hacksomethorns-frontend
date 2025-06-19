@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:frontend/api_methods/api_service_analytics.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -294,119 +295,131 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
                   // List of categories
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: chartData.length,
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final data = chartData[index];
-                        final formattedTime = data.time.split('.').first;
+                    child: AnimationLimiter(
+                      child: ListView.builder(
+                        itemCount: chartData.length,
+                        physics: const BouncingScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final data = chartData[index];
+                          final formattedTime = data.time.split('.').first;
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark
-                                  ? Colors.grey[800]!
-                                  : Colors.grey[200]!,
-                              width: 1,
+                          return AnimationConfiguration.staggeredList(
+                            position: index,
+                            child: SlideAnimation(
+                              child: FadeInAnimation(
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(18),
+                                  decoration: BoxDecoration(
+                                    color: cardColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.grey[800]!
+                                          : Colors.grey[200]!,
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isDark
+                                            ? Colors.black.withOpacity(0.2)
+                                            : Colors.grey.withOpacity(0.08),
+                                        spreadRadius: 1,
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Color indicator with rank
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: data.color,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: backgroundColor,
+                                                width: 2,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${index + 1}',
+                                            style: TextStyle(
+                                              color: data.color!
+                                                          .computeLuminance() >
+                                                      0.5
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 16),
+
+                                      // Category name
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              data.x,
+                                              style: TextStyle(
+                                                color: textColor,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              formattedTime,
+                                              style: TextStyle(
+                                                color: subtitleColor,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // Percentage
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.grey[800]
+                                              : Colors.grey[100],
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          "${data.y}%",
+                                          style: TextStyle(
+                                            color: textColor,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDark
-                                    ? Colors.black.withOpacity(0.2)
-                                    : Colors.grey.withOpacity(0.08),
-                                spreadRadius: 1,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              // Color indicator with rank
-                              Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: data.color,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: backgroundColor,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      color:
-                                          data.color!.computeLuminance() > 0.5
-                                              ? Colors.black
-                                              : Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 16),
-
-                              // Category name
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      data.x,
-                                      style: TextStyle(
-                                        color: textColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      formattedTime,
-                                      style: TextStyle(
-                                        color: subtitleColor,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Percentage
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.grey[800]
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "${data.y}%",
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],

@@ -1,5 +1,6 @@
 // day_timeline_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:provider/provider.dart';
@@ -32,19 +33,27 @@ class DayTimelineWidget extends StatelessWidget {
               ),
             ),
           ),
-          ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: list.length,
-              itemBuilder: (context, index) {
-                print(list[index].endTime);
-                return list[index].endTime == DateTime(1970, 1, 1, 5, 30) ||
-                        list[index].endTime == null
-                    ? SizedBox()
-                    : TimeEntryWidget(
-                        timeEntry: list[index],
-                      );
-              })
+          AnimationLimiter(
+            child: ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  print(list[index].endTime);
+                  return AnimationConfiguration.staggeredList(
+                      position: index,
+                      child: SlideAnimation(
+                        child: FadeInAnimation(
+                            child: list[index].endTime ==
+                                        DateTime(1970, 1, 1, 5, 30) ||
+                                    list[index].endTime == null
+                                ? SizedBox()
+                                : TimeEntryWidget(
+                                    timeEntry: list[index],
+                                  )),
+                      ));
+                }),
+          )
         ],
       ),
     );

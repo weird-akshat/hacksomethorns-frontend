@@ -23,6 +23,7 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
   int? selectedCategoryId;
   String selectedCategoryName = 'Uncategorized';
   bool isCurrentTimeEntry = false;
+  bool isLoading = false; // Add loading state
 
   @override
   void initState() {
@@ -103,9 +104,11 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                       backgroundColor: WidgetStatePropertyAll(cardColor),
                     ),
                     icon: Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          }),
                 Text(
                   'New Time Entry',
                   style: TextStyle(
@@ -114,90 +117,118 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                       fontWeight: FontWeight.bold),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final timelogProvider =
-                        Provider.of<TimelogProvider>(context, listen: false);
-                    final currentTimeEntryProvider =
-                        Provider.of<CurrentTimeEntryProvider>(context,
-                            listen: false);
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
 
-                    // Create new time entry from current widget state
-                    final newTimeEntry = TimeEntry(
-                      userId: "0",
-                      timeEntryId: "0", // Will be set by the server
-                      description: descriptionController.text.trim().isEmpty
-                          ? 'Untitled'
-                          : descriptionController.text.trim(),
-                      startTime: startTime,
-                      endTime: isCurrentTimeEntry ? null : endTime,
-                      //issue here if it doesn't run
-                      categoryId: selectedCategoryId ?? 0,
-                      categoryName: selectedCategoryName,
-                    );
+                          final timelogProvider = Provider.of<TimelogProvider>(
+                              context,
+                              listen: false);
+                          final currentTimeEntryProvider =
+                              Provider.of<CurrentTimeEntryProvider>(context,
+                                  listen: false);
 
-                    try {
-                      // Make API call to create new time entry
-                      final createdEntry = await postTimeEntry(newTimeEntry);
-
-                      if (createdEntry != null) {
-                        // Work directly with the API response - don't copy back to widget
-
-                        // Add to timelog provider for completed entries
-                        if (createdEntry.endTime != null) {
-                          final entryDate = DateTime(
-                            createdEntry.startTime.year,
-                            createdEntry.startTime.month,
-                            createdEntry.startTime.day,
+                          // Create new time entry from current widget state
+                          final newTimeEntry = TimeEntry(
+                            userId: "0",
+                            timeEntryId: "0", // Will be set by the server
+                            description:
+                                descriptionController.text.trim().isEmpty
+                                    ? 'Untitled'
+                                    : descriptionController.text.trim(),
+                            startTime: startTime,
+                            endTime: isCurrentTimeEntry ? null : endTime,
+                            //issue here if it doesn't run
+                            categoryId: selectedCategoryId ?? 0,
+                            categoryName: selectedCategoryName,
                           );
-                          timelogProvider.addTimeEntry(entryDate, createdEntry);
-                        }
 
-                        // If it's a current time entry, update the current time entry provider
-                        if (createdEntry.endTime == null) {
-                          currentTimeEntryProvider.setEntry(createdEntry);
-                        }
+                          try {
+                            // Make API call to create new time entry
+                            final createdEntry =
+                                await postTimeEntry(newTimeEntry);
+                            createdEntry?.startTime =
+                                createdEntry.startTime.toLocal();
 
-                        Navigator.pop(context);
+                            if (createdEntry != null) {
+                              // Work directly with the API response - don't copy back to widget
 
-                        // Show success message based on the API response
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(createdEntry.endTime == null
-                                ? 'Time tracking started successfully'
-                                : 'Time entry created successfully'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      } else {
-                        throw Exception('Failed to create entry');
-                      }
-                    } catch (e) {
-                      // Show error message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Failed to create time entry: ${e.toString()}'),
-                          backgroundColor: Colors.red,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
+                              // Add to timelog provider for completed entries
+                              if (createdEntry.endTime != null) {
+                                final entryDate = DateTime(
+                                  createdEntry.startTime.year,
+                                  createdEntry.startTime.month,
+                                  createdEntry.startTime.day,
+                                );
+                                timelogProvider.addTimeEntry(
+                                    entryDate, createdEntry);
+                              }
 
-                      print("Failed to create entry: $e");
-                    }
-                  },
+                              // If it's a current time entry, update the current time entry provider
+                              if (createdEntry.endTime == null) {
+                                currentTimeEntryProvider.setEntry(createdEntry);
+                              }
+
+                              Navigator.pop(context);
+
+                              // Show success message based on the API response
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(createdEntry.endTime == null
+                                      ? 'Time tracking started successfully'
+                                      : 'Time entry created successfully'),
+                                  backgroundColor: Colors.green,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              throw Exception('Failed to create entry');
+                            }
+                          } catch (e) {
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Failed to create time entry: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+
+                            print("Failed to create entry: $e");
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                            }
+                          }
+                        },
                   style: ButtonStyle(
                     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10))),
                     backgroundColor: WidgetStatePropertyAll(cardColor),
                   ),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                        color: textColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(accentColor),
+                          ),
+                        )
+                      : Text(
+                          'Save',
+                          style: TextStyle(
+                              color: textColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold),
+                        ),
                 )
               ],
             ),
@@ -207,6 +238,7 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                 controller: descriptionController,
                 cursorColor: accentColor,
                 style: TextStyle(color: textColor),
+                enabled: !isLoading, // Disable input when loading
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: cardColor,
@@ -218,6 +250,10 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: accentColor),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: borderColor.withOpacity(0.5)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -259,17 +295,19 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                     style: TextStyle(color: hintColor, fontSize: 12),
                   ),
                   value: isCurrentTimeEntry,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      isCurrentTimeEntry = value ?? false;
-                      if (isCurrentTimeEntry) {
-                        endTime = null;
-                      } else {
-                        // Set default end time to 1 hour from start
-                        endTime = startTime.add(Duration(hours: 1));
-                      }
-                    });
-                  },
+                  onChanged: isLoading
+                      ? null
+                      : (bool? value) {
+                          setState(() {
+                            isCurrentTimeEntry = value ?? false;
+                            if (isCurrentTimeEntry) {
+                              endTime = null;
+                            } else {
+                              // Set default end time to 1 hour from start
+                              endTime = startTime.add(Duration(hours: 1));
+                            }
+                          });
+                        },
                   activeColor: accentColor,
                   checkColor: Colors.white,
                   side: BorderSide(color: borderColor),
@@ -332,19 +370,22 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: () async {
-                          final newStartTime =
-                              await pickDateTime(startTime, context);
-                          setState(() {
-                            startTime = newStartTime;
-                            // If not a current time entry and end time is before start time, adjust it
-                            if (!isCurrentTimeEntry &&
-                                endTime != null &&
-                                endTime!.isBefore(startTime)) {
-                              endTime = startTime.add(Duration(hours: 1));
-                            }
-                          });
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                final newStartTime =
+                                    await pickDateTime(startTime, context);
+                                // final newStartTime = newwStartTime.toLocal();
+                                setState(() {
+                                  startTime = newStartTime;
+                                  // If not a current time entry and end time is before start time, adjust it
+                                  if (!isCurrentTimeEntry &&
+                                      endTime != null &&
+                                      endTime!.isBefore(startTime)) {
+                                    endTime = startTime.add(Duration(hours: 1));
+                                  }
+                                });
+                              },
                       ),
                     ),
                     if (!isCurrentTimeEntry)
@@ -406,15 +447,17 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                               ),
                             ),
                           ),
-                          onPressed: () async {
-                            if (endTime != null) {
-                              final newEndTime =
-                                  await pickDateTime(endTime!, context);
-                              setState(() {
-                                endTime = newEndTime;
-                              });
-                            }
-                          },
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (endTime != null) {
+                                    final newEndTime =
+                                        await pickDateTime(endTime!, context);
+                                    setState(() {
+                                      endTime = newEndTime;
+                                    });
+                                  }
+                                },
                         ),
                       ),
                     Padding(
