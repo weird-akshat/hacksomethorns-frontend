@@ -6,31 +6,39 @@ import 'package:frontend/time_tracking/entities/category.dart';
 
 Future<List<Category>> getAllCategories(String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse("${apiUrl}api/users/$userId/categories/");
+  String? nextUrl = "${apiUrl}api/users/$userId/categories/";
+  List<Category> allCategories = [];
 
   try {
-    final response = await http.get(uri);
+    while (nextUrl != null) {
+      final uri = Uri.parse(nextUrl);
+      final response = await http.get(uri);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body)['results'];
-      print(jsonList);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> jsonList = data['results'];
 
-      return jsonList.map((json) {
-        return Category(
-          userId.toString(),
-          json['_categoryId'] ?? 0,
-          json['_name'] ?? '',
-          (parseColor(json['_color'])),
-        );
-      }).toList();
-    } else {
-      print("Failed to fetch categories: ${response.statusCode}");
-      return [];
+        final List<Category> pageCategories = jsonList.map((json) {
+          return Category(
+            userId.toString(),
+            json['_categoryId'] ?? 0,
+            json['_name'] ?? '',
+            parseColor(json['_color']),
+          );
+        }).toList();
+
+        allCategories.addAll(pageCategories);
+        nextUrl = data['next'];
+      } else {
+        print("Failed to fetch categories: ${response.statusCode}");
+        break;
+      }
     }
   } catch (e) {
     print("Error fetching categories: $e");
-    return [];
   }
+
+  return allCategories;
 }
 
 Color parseColor(String? value) {

@@ -1,49 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/api_methods/fetch_time_entries.dart';
 import 'package:frontend/api_methods/post_time_entry.dart';
-import 'package:frontend/api_methods/update_time_entry.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
+import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:provider/provider.dart';
 
-class UpdateTimeEntrySheet extends StatefulWidget {
-  UpdateTimeEntrySheet({super.key, required this.timeEntry});
-  TimeEntry timeEntry;
+class NewTimeEntrySheet extends StatefulWidget {
+  const NewTimeEntrySheet({super.key});
 
   @override
-  State<UpdateTimeEntrySheet> createState() => _TimeEntrySheetState();
+  State<NewTimeEntrySheet> createState() => _NewTimeEntrySheetState();
 }
 
-class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
-  late DateTime newStartTime;
-  late DateTime newEndTime;
-  late String desc;
+class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
+  late DateTime startTime;
+  DateTime? endTime;
   late TextEditingController descriptionController;
-  late int selectedCategoryId;
-  late String selectedCategoryName;
-  late DateTime originalDate; // Store original date for provider updates
+  int? selectedCategoryId;
+  String selectedCategoryName = 'Uncategorized';
+  bool isCurrentTimeEntry = false;
 
   @override
   void initState() {
     super.initState();
-    newStartTime = widget.timeEntry.startTime;
-
-    // Fix: Handle null endTime safely
-    newEndTime = widget.timeEntry.endTime ?? DateTime.now();
-
-    desc = widget.timeEntry.description;
-    descriptionController = TextEditingController(text: desc);
-    selectedCategoryId = widget.timeEntry.categoryId ?? -1;
-    selectedCategoryName = widget.timeEntry.categoryName ?? 'Uncategorized';
-    originalDate = DateTime(
-      widget.timeEntry.startTime.year,
-      widget.timeEntry.startTime.month,
-      widget.timeEntry.startTime.day,
-    );
+    final now = DateTime.now();
+    startTime = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    endTime = DateTime(now.year, now.month, now.day, now.hour + 1, now.minute);
+    descriptionController = TextEditingController();
+    selectedCategoryId = null; // Start with no category selected
   }
 
   @override
@@ -64,6 +52,16 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
         ),
       ),
     );
+  }
+
+  String _formatDuration() {
+    if (endTime == null) {
+      return 'Currently tracking...';
+    }
+    final duration = endTime!.difference(startTime);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    return 'Duration: ${hours}h ${minutes}m';
   }
 
   @override
@@ -109,7 +107,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                       Navigator.pop(context);
                     }),
                 Text(
-                  'Time Entry',
+                  'New Time Entry',
                   style: TextStyle(
                       color: textColor,
                       fontSize: 20,
@@ -119,93 +117,73 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                   onPressed: () async {
                     final timelogProvider =
                         Provider.of<TimelogProvider>(context, listen: false);
+                    final currentTimeEntryProvider =
+                        Provider.of<CurrentTimeEntryProvider>(context,
+                            listen: false);
 
-                    // Store original values for comparison
-                    final originalStartTime = widget.timeEntry.startTime;
-                    final originalEndTime = widget.timeEntry.endTime;
-                    final originalDescription = widget.timeEntry.description;
-                    final originalCategoryId = widget.timeEntry.categoryId;
-                    final originalCategoryName = widget.timeEntry.categoryName;
-
-                    // Update the time entry object
-                    widget.timeEntry.description = descriptionController.text;
-                    widget.timeEntry.startTime = newStartTime;
-                    widget.timeEntry.endTime = newEndTime;
-                    widget.timeEntry.categoryId = selectedCategoryId;
-                    widget.timeEntry.categoryName = selectedCategoryName;
+                    // Create new time entry from current widget state
+                    final newTimeEntry = TimeEntry(
+                      userId: "0",
+                      timeEntryId: "0", // Will be set by the server
+                      description: descriptionController.text.trim().isEmpty
+                          ? 'Untitled'
+                          : descriptionController.text.trim(),
+                      startTime: startTime,
+                      endTime: isCurrentTimeEntry ? null : endTime,
+                      //issue here if it doesn't run
+                      categoryId: selectedCategoryId ?? 0,
+                      categoryName: selectedCategoryName,
+                    );
 
                     try {
-                      // Make API call to persist changes
-                      final success = await updateTimeEntry(widget.timeEntry);
+                      // Make API call to create new time entry
+                      final createdEntry = await postTimeEntry(newTimeEntry);
 
-                      if (success) {
-                        // Check if the date changed (entry moved to different day)
-                        final newDate = DateTime(newStartTime.year,
-                            newStartTime.month, newStartTime.day);
-                        final oldDate = DateTime(originalStartTime.year,
-                            originalStartTime.month, originalStartTime.day);
+                      if (createdEntry != null) {
+                        // Work directly with the API response - don't copy back to widget
 
-                        if (newDate != oldDate) {
-                          // Entry moved to a different day - remove from old date and add to new date
+                        // Add to timelog provider for completed entries
+                        if (createdEntry.endTime != null) {
+                          final entryDate = DateTime(
+                            createdEntry.startTime.year,
+                            createdEntry.startTime.month,
+                            createdEntry.startTime.day,
+                          );
+                          timelogProvider.addTimeEntry(entryDate, createdEntry);
+                        }
 
-                          // Remove from old date
-                          if (timelogProvider.map.containsKey(oldDate)) {
-                            timelogProvider.map[oldDate]?.removeWhere((entry) =>
-                                entry.timeEntryId ==
-                                    widget.timeEntry
-                                        .timeEntryId || // Use ID if available
-                                (entry.startTime == originalStartTime &&
-                                    entry.endTime == originalEndTime &&
-                                    entry.description == originalDescription));
-
-                            // Remove the date key if no entries left
-                            if (timelogProvider.map[oldDate]?.isEmpty == true) {
-                              timelogProvider.map.remove(oldDate);
-                            }
-                          }
-
-                          // Add to new date
-                          timelogProvider.addTimeEntry(
-                              newDate, widget.timeEntry);
-                        } else {
-                          // Entry stayed on same day - just notify listeners to refresh UI
-                          timelogProvider
-                              .sort(); // Re-sort in case time changed
-                          timelogProvider.notifyListeners();
+                        // If it's a current time entry, update the current time entry provider
+                        if (createdEntry.endTime == null) {
+                          currentTimeEntryProvider.setEntry(createdEntry);
                         }
 
                         Navigator.pop(context);
 
-                        // Show success message
+                        // Show success message based on the API response
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Time entry updated successfully'),
+                            content: Text(createdEntry.endTime == null
+                                ? 'Time tracking started successfully'
+                                : 'Time entry created successfully'),
                             backgroundColor: Colors.green,
                             duration: Duration(seconds: 2),
                           ),
                         );
                       } else {
-                        throw Exception('Failed to update entry');
+                        throw Exception('Failed to create entry');
                       }
                     } catch (e) {
-                      // Revert changes if API call failed
-                      widget.timeEntry.description = originalDescription;
-                      widget.timeEntry.startTime = originalStartTime;
-                      widget.timeEntry.endTime = originalEndTime;
-                      widget.timeEntry.categoryId = originalCategoryId;
-                      widget.timeEntry.categoryName = originalCategoryName;
-
                       // Show error message
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Failed to update time entry: ${e.toString()}'),
+                              'Failed to create time entry: ${e.toString()}'),
                           backgroundColor: Colors.red,
                           duration: Duration(seconds: 3),
                         ),
                       );
 
-                      print("Failed to update entry: $e");
+                      print("Failed to create entry: $e");
                     }
                   },
                   style: ButtonStyle(
@@ -243,9 +221,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onChanged: (value) {
-                  desc = value;
-                },
               ),
             ),
             Padding(
@@ -257,11 +232,48 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                     selectedCategoryId = cat.categoryId;
                     selectedCategoryName = cat.name;
                   } else {
-                    // Handle the case when no category is selected or category is cleared
-                    selectedCategoryId = -1;
+                    selectedCategoryId = null;
                     selectedCategoryName = 'Uncategorized';
                   }
                 },
+              ),
+            ),
+            // Toggle for current time entry
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(maxWidth: 316),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: borderColor),
+                ),
+                child: CheckboxListTile(
+                  title: Text(
+                    'Start as current time entry',
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                  subtitle: Text(
+                    'No end time - tracks current activity',
+                    style: TextStyle(color: hintColor, fontSize: 12),
+                  ),
+                  value: isCurrentTimeEntry,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isCurrentTimeEntry = value ?? false;
+                      if (isCurrentTimeEntry) {
+                        endTime = null;
+                      } else {
+                        // Set default end time to 1 hour from start
+                        endTime = startTime.add(Duration(hours: 1));
+                      }
+                    });
+                  },
+                  activeColor: accentColor,
+                  checkColor: Colors.white,
+                  side: BorderSide(color: borderColor),
+                ),
               ),
             ),
             Expanded(
@@ -307,10 +319,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                                               color: hintColor, fontSize: 14)),
                                       SizedBox(height: 4),
                                       Text(
-                                        newStartTime
-                                            .toLocal()
-                                            .toString()
-                                            .substring(0, 16),
+                                        startTime.toString().substring(0, 16),
                                         style: TextStyle(
                                             color: textColor,
                                             fontSize: 16,
@@ -324,70 +333,90 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                           ),
                         ),
                         onPressed: () async {
-                          newStartTime =
-                              await pickDateTime(newStartTime, context);
-                          setState(() {});
+                          final newStartTime =
+                              await pickDateTime(startTime, context);
+                          setState(() {
+                            startTime = newStartTime;
+                            // If not a current time entry and end time is before start time, adjust it
+                            if (!isCurrentTimeEntry &&
+                                endTime != null &&
+                                endTime!.isBefore(startTime)) {
+                              endTime = startTime.add(Duration(hours: 1));
+                            }
+                          });
                         },
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextButton(
-                        style: ButtonStyle(
-                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10))),
-                          backgroundColor: WidgetStatePropertyAll(cardColor),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            width: 300,
-                            height: 70,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  height: 30,
-                                  width: 30,
-                                  decoration: BoxDecoration(
-                                    color: hintColor,
-                                    borderRadius: BorderRadius.circular(6),
+                    if (!isCurrentTimeEntry)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextButton(
+                          style: ButtonStyle(
+                            shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            backgroundColor: WidgetStatePropertyAll(cardColor),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              width: 300,
+                              height: 70,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    height: 30,
+                                    width: 30,
+                                    decoration: BoxDecoration(
+                                      color: hintColor,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(Icons.pause,
+                                        color: accentColor, size: 18),
                                   ),
-                                  child: Icon(Icons.pause,
-                                      color: accentColor, size: 18),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text('End Time',
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16.0, 0, 0, 0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text('End Time',
+                                            style: TextStyle(
+                                                color: hintColor,
+                                                fontSize: 14)),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          endTime
+                                                  ?.toString()
+                                                  .substring(0, 16) ??
+                                              'Not set',
                                           style: TextStyle(
-                                              color: hintColor, fontSize: 14)),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        newEndTime.toString().substring(0, 16),
-                                        style: TextStyle(
-                                            color: textColor,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600),
-                                      )
-                                    ],
+                                              color: textColor,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600),
+                                        )
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
+                          onPressed: () async {
+                            if (endTime != null) {
+                              final newEndTime =
+                                  await pickDateTime(endTime!, context);
+                              setState(() {
+                                endTime = newEndTime;
+                              });
+                            }
+                          },
                         ),
-                        onPressed: () async {
-                          newEndTime = await pickDateTime(newEndTime, context);
-                          setState(() {});
-                        },
                       ),
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
@@ -400,7 +429,7 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                         ),
                         child: Center(
                           child: Text(
-                            'Duration: ${newEndTime.difference(newStartTime).inHours}h ${newEndTime.difference(newStartTime).inMinutes % 60}m',
+                            _formatDuration(),
                             style: TextStyle(
                               color: textColor,
                               fontSize: 16,

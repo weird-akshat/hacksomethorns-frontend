@@ -38,21 +38,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lightTheme = ThemeData(
-      brightness: Brightness.light,
-      primarySwatch: Colors.blue,
-    );
-
-    final darkTheme = ThemeData(
-      brightness: Brightness.dark,
-      primarySwatch: Colors.blue,
-    );
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return MaterialApp(
-      home: Home(),
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: themeProvider.themeMode,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Home(),
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primarySwatch: Colors.blue,
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.blue,
+          ),
+          themeMode: themeProvider.themeMode ?? ThemeMode.system,
+        );
+      },
     );
   }
 }
