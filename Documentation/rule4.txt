@@ -1,0 +1,31 @@
+yoo, best of luck for your presentation (not that i am hoping for any brownie points or actual points from this, but if you want to, who am i to deny right?)
+  
+TLDR
+Briefly explain what export/share feature you've added: PDF for bar chart and pie chart.
+Mention where in the app it can be accessed: in the category report page in the mobile app.
+List which files/components were changed or added for this feature: ReFL3KT/frontend/lib/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart
+
+
+                                         
+coming back to point
+export feature: pdf of the bar chart and doughnut chart (previously a pie chart that's why you'll see pie in the variable names).
+the doughut chart shows the comparison betweeen different time tracking entries, showcasing how much time you spent on each unique entry (within a chosen timeframe).
+the bar chart shows the time spent on that category for each day (given that you made a time entry for that category that day).
+
+alright i think i should explain what a time entry is, so that it doesn't get confusing 
+time entry is essentially a block of time, it has start time, end time, description, category. It is used to keep track of what you were doing at what time essentially.
+
+now let's say the category is studying 
+the bar chart will show how much time you spent on studying each day (for a given time period)
+the pie chart will show the percentage of various descriptions for that category during that time. here time entries could be subjects you need to study. 
+
+enough yapping ig
+you'll find the components that changed are in category_detailed_analytics.dart in (ReFL3KT/frontend/lib/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart ofc pubsec.yaml lmao.
+
+if you want to see the dependencies they are there in the pubsec.yaml (all the dependendencies starting with fusion)
+
+                                                                      
+TLDR
+Briefly explain what export/share feature you've added: PDF for bar chart and pie chart.
+Mention where in the app it can be accessed: in the category report page in the mobile app.
+List which files/components were changed or added for this feature: ReFL3KT/frontend/lib/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart
