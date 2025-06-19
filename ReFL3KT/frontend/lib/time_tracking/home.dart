@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/pages/analytics_screen.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/new_time_entry_sheet.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
+import 'package:frontend/providers/category_provider.dart';
+import 'package:frontend/providers/timelog_provider.dart';
+import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
@@ -15,6 +19,34 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   Widget currentWidgetPage = const TimeTrackingPage();
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => isLoading = true);
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
+    if (categoryProvider.isEmpty()) {
+      await categoryProvider.loadCategories('1');
+    }
+
+    final timelogProvider =
+        Provider.of<TimelogProvider>(context, listen: false);
+    if (timelogProvider.isEmpty()) {
+      await timelogProvider.loadTimeEntries();
+    }
+
+    final currentEntryProvider =
+        Provider.of<CurrentTimeEntryProvider>(context, listen: false);
+    await currentEntryProvider.loadCurrentEntry("1");
+
+    setState(() => isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,58 +54,51 @@ class _HomeState extends State<Home> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: currentWidgetPage is CategoryAnalytics
-            ? [
-                IconButton(
-                  icon: Icon(
-                    themeProvider.isDarkMode
-                        ? Icons.dark_mode
-                        : Icons.light_mode,
-                  ),
-                  onPressed: () {
-                    themeProvider.toggleTheme();
-                  },
-                )
-              ]
-            : [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(25)),
-                        ),
-                        builder: (context) => const FractionallySizedBox(
-                          heightFactor: 0.6,
-                          child: NewTimeEntrySheet(),
-                        ),
-                      );
-                    },
-                    child: Icon(
-                      Icons.add,
-                      color: themeProvider.isDarkMode
-                          ? timeEntryWidgetTextColorDark
-                          : timeEntryWidgetTextColorLight,
+        actions: [
+          if (!(currentWidgetPage is CategoryAnalytics ||
+              currentWidgetPage is AnalyticsScreen))
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(25)),
                     ),
-                  ),
+                    builder: (context) => const FractionallySizedBox(
+                      heightFactor: 0.6,
+                      child: NewTimeEntrySheet(),
+                    ),
+                  );
+                },
+                child: Icon(
+                  Icons.add,
+                  color: themeProvider.isDarkMode
+                      ? timeEntryWidgetTextColorDark
+                      : timeEntryWidgetTextColorLight,
                 ),
-                IconButton(
-                  icon: Icon(
-                    themeProvider.isDarkMode
-                        ? Icons.dark_mode
-                        : Icons.light_mode,
-                  ),
-                  onPressed: () {
-                    themeProvider.toggleTheme();
-                  },
-                )
-              ],
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+          IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+            ),
+            onPressed: themeProvider.toggleTheme,
+          ),
+        ],
         title: Text(
-          currentWidgetPage is CategoryAnalytics ? 'Analytics' : 'Timer',
+          currentWidgetPage is CategoryAnalytics
+              ? 'Category Analytics'
+              : currentWidgetPage is AnalyticsScreen
+                  ? 'Analytics'
+                  : 'Timer',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: themeProvider.isDarkMode
@@ -108,10 +133,21 @@ class _HomeState extends State<Home> {
                 });
               },
             ),
+            ListTile(
+              title: const Text('Analytics'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  currentWidgetPage = const AnalyticsScreen();
+                });
+              },
+            ),
           ],
         ),
       ),
-      body: currentWidgetPage,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : currentWidgetPage,
     );
   }
 }

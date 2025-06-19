@@ -44,6 +44,7 @@ dependencies:
   syncfusion_flutter_xlsio: ^29.1.38
   path_provider: ^2.1.5
   share_plus: ^11.0.0
+  pie_chart: ^5.4.0
   # Add these dependencies to pubspec.yaml:
 
 
