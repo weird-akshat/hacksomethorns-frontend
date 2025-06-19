@@ -1,17 +1,17 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class ApiServiceAnalytics {
-  static const baseUrl = 'https://refl3kt-backend.onrender.com';
-
+  static String baseUrl = dotenv.env['API_URL']!;
   // Returns: Map of category to duration string
   static Future<Map<String, String>> getCategoryTimeSpentMap(
     String userID,
   ) async {
     final url = Uri.parse(
-      '$baseUrl/api/users/$userID/time-entries/analytics/?_startTime=2025-03-01&_endTime=2025-06-20',
+      '${baseUrl}api/users/$userID/time-entries/analytics/?_startTime=2000-01-01&_endTime=2025-12-31',
     );
-
+    print(url);
     final response = await http.get(
       url,
       headers: {'Content-Type': 'application/json'},
