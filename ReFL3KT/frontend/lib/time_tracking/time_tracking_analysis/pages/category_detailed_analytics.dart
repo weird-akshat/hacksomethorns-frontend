@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -6,15 +9,18 @@ import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/showcase_time_entry_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
-// import 'package:frontend/theme_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class CategoryDetailedAnalytics extends StatefulWidget {
-  const CategoryDetailedAnalytics(
-      {super.key,
-      required this.category,
-      required this.endTime,
-      required this.startTime});
+  const CategoryDetailedAnalytics({
+    super.key,
+    required this.category,
+    required this.endTime,
+    required this.startTime,
+  });
   final DateTime startTime;
   final DateTime endTime;
   final Category category;
@@ -26,6 +32,8 @@ class CategoryDetailedAnalytics extends StatefulWidget {
 
 class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
   late TooltipBehavior _tooltip;
+  final GlobalKey<SfCircularChartState> _pieChartKey = GlobalKey();
+  final GlobalKey<SfCartesianChartState> _barChartKey = GlobalKey();
 
   // API integration variables
   Map<String, dynamic>? categoryAnalyticsData;
@@ -35,10 +43,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
   @override
   void initState() {
     super.initState();
-
     _tooltip = TooltipBehavior(enable: true);
-
-    // Fetch API data
     _fetchCategoryAnalytics();
   }
 
@@ -50,7 +55,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       });
 
       final data = await getCategoryAnalytics(
-        userId: "1", // Assuming category has userId
+        userId: "1",
         categoryId: widget.category.categoryId,
         startTime: widget.startTime,
         endTime: widget.endTime,
@@ -74,6 +79,65 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
     }
   }
 
+  Future<void> _exportChartsToPdf() async {
+    try {
+      // Capture Pie Chart as image
+      final ui.Image? pieImage =
+          await _pieChartKey.currentState?.toImage(pixelRatio: 3.0);
+      final ByteData? pieBytes =
+          await pieImage?.toByteData(format: ui.ImageByteFormat.png);
+
+      // Capture Bar Chart as image
+      final ui.Image? barImage =
+          await _barChartKey.currentState?.toImage(pixelRatio: 3.0);
+      final ByteData? barBytes =
+          await barImage?.toByteData(format: ui.ImageByteFormat.png);
+
+      // Create PDF document
+      final PdfDocument document = PdfDocument();
+
+      // --- Page 1: Pie Chart ---
+      final PdfPage piePage = document.pages.add();
+      final PdfGraphics pieGraphics = piePage.graphics;
+      pieGraphics.drawString(
+          '${widget.category.name} - Time Entry Distribution',
+          PdfStandardFont(PdfFontFamily.helvetica, 20),
+          bounds: Rect.fromLTWH(0, 20, piePage.getClientSize().width, 30));
+      if (pieBytes != null) {
+        final PdfBitmap pieBitmap = PdfBitmap(pieBytes.buffer.asUint8List());
+        pieGraphics.drawImage(pieBitmap,
+            Rect.fromLTWH(0, 60, piePage.getClientSize().width, 300));
+      }
+
+      // --- Page 2: Bar Chart ---
+      final PdfPage barPage = document.pages.add();
+      final PdfGraphics barGraphics = barPage.graphics;
+      barGraphics.drawString('${widget.category.name} - Daily Time Spent',
+          PdfStandardFont(PdfFontFamily.helvetica, 20),
+          bounds: Rect.fromLTWH(0, 20, barPage.getClientSize().width, 30));
+      if (barBytes != null) {
+        final PdfBitmap barBitmap = PdfBitmap(barBytes.buffer.asUint8List());
+        barGraphics.drawImage(barBitmap,
+            Rect.fromLTWH(0, 60, barPage.getClientSize().width, 300));
+      }
+
+      // Save and share PDF
+      final List<int> bytes = await document.save();
+      document.dispose();
+
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/${widget.category.name}_report.pdf';
+      final file = File(path);
+      await file.writeAsBytes(bytes);
+
+      await Share.shareXFiles([XFile(path)],
+          text: '${widget.category.name} Analytics Report');
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to export PDF: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
@@ -93,6 +157,11 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
             centerTitle: true,
             elevation: 0,
             actions: [
+              IconButton(
+                icon: Icon(Icons.picture_as_pdf),
+                onPressed: isLoading ? null : _exportChartsToPdf,
+                tooltip: 'Download PDF',
+              ),
               if (isLoading)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -174,7 +243,6 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       );
     }
 
-    // Main content when data is loaded
     return _buildMainContent(themeProvider);
   }
 
@@ -188,19 +256,14 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       );
     }
 
-    print('Category Analytics Data: $categoryAnalyticsData');
-
     // Prepare pie chart data from grouped_entries
     final List<PieChartData> pieChartData = _preparePieChartData(themeProvider);
-    print('Pie Chart Data Length: ${pieChartData.length}');
 
     // Prepare bar chart data from daily_stats
     final List<BarChartData> barChartData = _prepareBarChartData();
-    print('Bar Chart Data Length: ${barChartData.length}');
 
     // Prepare time entries list
     final List<TimeEntry> timeEntries = _prepareTimeEntries();
-    print('Time Entries Length: ${timeEntries.length}');
 
     return SingleChildScrollView(
       child: Container(
@@ -439,6 +502,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: SfCircularChart(
+                      key: _pieChartKey,
                       backgroundColor: themeProvider.cardColor,
                       legend: Legend(
                         isVisible: true,
@@ -563,6 +627,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: SfCartesianChart(
+                      key: _barChartKey,
                       backgroundColor: themeProvider.cardColor,
                       plotAreaBorderWidth: 0,
                       primaryXAxis: CategoryAxis(
@@ -771,19 +836,13 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
   }
 
   List<PieChartData> _preparePieChartData(ThemeProvider themeProvider) {
-    if (categoryAnalyticsData == null) {
-      print('Category analytics data is null');
-      return [];
-    }
+    if (categoryAnalyticsData == null) return [];
 
     try {
       final groupedEntries = categoryAnalyticsData!['grouped_entries'] as List;
-      print('Grouped entries: $groupedEntries');
-
       final totalDurationString =
           categoryAnalyticsData!['total_duration'] as String;
       final totalMinutes = _parseDurationToMinutes(totalDurationString);
-      print('Total minutes: $totalMinutes');
 
       // Theme-aware colors
       final colors = themeProvider.isDarkMode
@@ -821,9 +880,6 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
         final percentage =
             totalMinutes > 0 ? (durationInMinutes / totalMinutes) * 100 : 0.0;
 
-        print(
-            'Pie chart item - Description: $description, Duration: $durationInMinutes, Percentage: $percentage');
-
         return PieChartData(
           description: description,
           durationInMinutes: durationInMinutes,
@@ -832,53 +888,39 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
         );
       }).toList();
     } catch (e) {
-      print('Error preparing pie chart data: $e');
       return [];
     }
   }
 
   List<BarChartData> _prepareBarChartData() {
-    if (categoryAnalyticsData == null) {
-      print('Category analytics data is null for bar chart');
-      return [];
-    }
+    if (categoryAnalyticsData == null) return [];
 
     try {
       final dailyStats =
           categoryAnalyticsData!['daily_stats'] as Map<String, dynamic>;
-      print('Daily stats: $dailyStats');
-
       return dailyStats.entries.map((entry) {
         final date = entry.key;
         final durationString = entry.value as String;
-        final durationInMinutes = _parseDurationToMinutes(durationString);
-
-        print('Bar chart item - Date: $date, Duration: $durationInMinutes');
+        final durationInMinutes =
+            _parseDurationToMinutes(durationString).toInt();
 
         return BarChartData(
           date: date,
-          durationInMinutes: durationInMinutes.toInt(),
+          durationInMinutes: durationInMinutes,
         );
       }).toList();
     } catch (e) {
-      print('Error preparing bar chart data: $e');
       return [];
     }
   }
 
   List<TimeEntry> _prepareTimeEntries() {
-    if (categoryAnalyticsData == null) {
-      print('Category analytics data is null for time entries');
-      return [];
-    }
+    if (categoryAnalyticsData == null) return [];
 
     try {
       final timeEntries = categoryAnalyticsData!['time_entries'] as List;
-      print('Time entries from API: ${timeEntries.length} entries');
-
       return timeEntries
           .map((entry) {
-            print('Time entry: $entry');
             return TimeEntry(
               timeEntryId: entry['_timeEntryId'] ?? '',
               description: entry['_description'] ?? 'Untitled',
@@ -892,58 +934,36 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
           .cast<TimeEntry>()
           .toList();
     } catch (e) {
-      print('Error preparing time entries: $e');
       return [];
     }
   }
 
   double _parseDurationToMinutes(String duration) {
-    // Parse duration string like "0:43:31.438333" to minutes (ignoring milliseconds)
-    print('Parsing duration: $duration');
-
     try {
       final parts = duration.split(':');
       if (parts.length >= 3) {
         final hours = int.tryParse(parts[0]) ?? 0;
         final minutes = int.tryParse(parts[1]) ?? 0;
-        // Only take the seconds part before the decimal point
         final secondsPart = parts[2].split('.')[0];
         final seconds = int.tryParse(secondsPart) ?? 0;
-
-        final totalMinutes = (hours * 60) + minutes + (seconds / 60);
-        print('Parsed duration: $totalMinutes minutes');
-        return totalMinutes;
+        return (hours * 60) + minutes + (seconds / 60);
       }
-    } catch (e) {
-      print('Error parsing duration: $e');
-    }
-
+    } catch (e) {}
     return 0.0;
   }
 
   String _formatDurationString(String duration) {
-    // Format duration string to show only up to seconds (no milliseconds)
     try {
       final parts = duration.split(':');
       if (parts.length >= 3) {
         final hours = parts[0];
         final minutes = parts[1];
-        // Only take the seconds part before the decimal point
         final secondsPart = parts[2].split('.')[0];
         return '$hours:$minutes:$secondsPart';
       }
-    } catch (e) {
-      print('Error formatting duration: $e');
-    }
-    return duration; // Return original if parsing fails
+    } catch (e) {}
+    return duration;
   }
-}
-
-class ChartData {
-  ChartData(this.x, this.y, [this.color]);
-  final String x;
-  final double y;
-  final Color? color;
 }
 
 class PieChartData {
