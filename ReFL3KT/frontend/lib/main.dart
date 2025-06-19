@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/goal_tracking/configuration.dart';
+import 'package:frontend/goal_tracking/pages/tree_screen.dart';
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
@@ -14,6 +16,8 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  initConfig();
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -42,7 +46,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: Home(),
+          home: TreeScreen(),
           theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,
