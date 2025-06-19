@@ -6,7 +6,8 @@ Map<DateTime, List<TimeEntry>> mapToDateTimeTimeEntryList(
   final Map<DateTime, List<TimeEntry>> result = {};
 
   rawData.forEach((dateStr, entryList) {
-    final date = DateTime.parse(dateStr);
+    final date = DateTime.parse(dateStr).toLocal();
+
     final timeEntries = (entryList as List<dynamic>)
         .map((entry) => mapToTimeEntry(entry))
         .toList();

@@ -11,9 +11,18 @@ class TimelogProvider with ChangeNotifier {
   }
 
   void sort() {
+    // Sort the inner lists
     for (final entry in map.entries) {
       entry.value.sort((a, b) => b.startTime.compareTo(a.startTime));
     }
+
+    // Sort the map by keys in descending order
+    final sortedEntries = map.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+
+    map = {
+      for (final entry in sortedEntries) entry.key: entry.value,
+    };
   }
 
   DateTime normalizeDate(DateTime date) {
@@ -22,9 +31,7 @@ class TimelogProvider with ChangeNotifier {
 
   Future<void> loadTimeEntries() async {
     map = await fetchTimeEntries();
-    for (final entry in map.entries) {
-      entry.value.sort((a, b) => b.startTime.compareTo(a.startTime));
-    }
+    sort();
     notifyListeners();
   }
 

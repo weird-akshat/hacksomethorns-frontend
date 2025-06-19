@@ -38,7 +38,8 @@ class DayTimelineWidget extends StatelessWidget {
               itemCount: list.length,
               itemBuilder: (context, index) {
                 print(list[index].endTime);
-                return list[index].endTime == DateTime(1970, 1, 1, 5, 30)
+                return list[index].endTime == DateTime(1970, 1, 1, 5, 30) ||
+                        list[index].endTime == null
                     ? SizedBox()
                     : TimeEntryWidget(
                         timeEntry: list[index],

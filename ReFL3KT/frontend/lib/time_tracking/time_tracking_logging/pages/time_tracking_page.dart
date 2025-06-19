@@ -5,8 +5,10 @@ import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/pages/new_time_entry_sheet.dart';
 // import 'package:frontend/time_tracking/pages/configuration.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
+import 'package:frontend/time_tracking/time_tracking_logging/pages/update_time_entry_sheet.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/current_time_tracking_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/day_timeline_widget.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/widgets/time_entry_widget.dart';
@@ -22,6 +24,7 @@ class TimeTrackingPage extends StatefulWidget {
 
 class _TimeTrackingPageState extends State<TimeTrackingPage> {
   @override
+  @override
   void initState() {
     super.initState();
 
@@ -30,6 +33,10 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
     if (timelogProvider.isEmpty()) {
       timelogProvider.loadTimeEntries();
     }
+
+    final currentEntryProvider =
+        Provider.of<CurrentTimeEntryProvider>(context, listen: false);
+    currentEntryProvider.loadCurrentEntry("1"); // or widget.userId
   }
 
   @override
@@ -53,16 +60,7 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                   ),
                   builder: (context) => FractionallySizedBox(
                     heightFactor: 0.6,
-                    child: TimeEntrySheet(
-                      timeEntry: TimeEntry(
-                          description: 'description',
-                          timeEntryId: 'timeEntryId',
-                          userId: 'userId',
-                          startTime: DateTime(2023),
-                          endTime: DateTime(2023),
-                          categoryId: 5,
-                          categoryName: 'abc'),
-                    ),
+                    child: NewTimeEntrySheet(),
                   ),
                 );
               },
@@ -104,6 +102,11 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                             Provider.of<TimelogProvider>(context).map))),
             GestureDetector(
               onTap: () {
+                final currentEntry = Provider.of<CurrentTimeEntryProvider>(
+                        context,
+                        listen: false)
+                    .currentEntry;
+
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -113,16 +116,9 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
                   ),
                   builder: (context) => FractionallySizedBox(
                     heightFactor: 0.6,
-                    child: TimeEntrySheet(
-                      timeEntry: TimeEntry(
-                          description: 'description',
-                          timeEntryId: 'timeEntryId',
-                          userId: 'userId',
-                          startTime: DateTime(2023),
-                          endTime: DateTime(2023),
-                          categoryId: 5,
-                          categoryName: 'abc'),
-                    ),
+                    child: currentEntry == null
+                        ? NewTimeEntrySheet()
+                        : UpdateTimeEntrySheet(timeEntry: currentEntry),
                   ),
                 );
               },
