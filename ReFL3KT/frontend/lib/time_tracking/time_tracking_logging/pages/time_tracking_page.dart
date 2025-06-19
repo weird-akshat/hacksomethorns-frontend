@@ -49,51 +49,6 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
     final currentEntryProvider = Provider.of<CurrentTimeEntryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(25)),
-                  ),
-                  builder: (context) => const FractionallySizedBox(
-                    heightFactor: 0.6,
-                    child: NewTimeEntrySheet(),
-                  ),
-                );
-              },
-              child: Icon(
-                Icons.add,
-                color: themeProvider.isDarkMode
-                    ? timeEntryWidgetTextColorDark
-                    : timeEntryWidgetTextColorLight,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(
-                themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-          )
-        ],
-        title: Text(
-          'Timer',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: themeProvider.isDarkMode
-                ? timeEntryWidgetTextColorDark
-                : timeEntryWidgetTextColorLight,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

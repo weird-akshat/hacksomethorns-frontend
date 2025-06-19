@@ -140,10 +140,6 @@ class _CategoryAnalyticsState extends State<CategoryAnalytics> {
   Widget build(BuildContext context) {
     final categories = Provider.of<CategoryProvider>(context).list;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Category Analytics'),
-        centerTitle: true,
-      ),
       body: Center(
         child: Column(
           children: [
