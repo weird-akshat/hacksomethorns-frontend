@@ -225,7 +225,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                               child: SfCircularChart(
                                 margin: const EdgeInsets.all(0),
                                 series: <CircularSeries>[
-                                  PieSeries<ChartData, String>(
+                                  DoughnutSeries<ChartData, String>(
                                     dataSource: chartData,
                                     pointColorMapper: (ChartData data, _) =>
                                         data.color,
