@@ -143,15 +143,15 @@ class _HomeState extends State<Home> {
                 });
               },
             ),
-            ListTile(
-              title: const Text('Goal Root Page'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = const GoalRootPage();
-                });
-              },
-            ),
+            // ListTile(
+            //   title: const Text('Goal Root Page'),
+            //   onTap: () {
+            //     Navigator.of(context).pop();
+            //     setState(() {
+            //       currentWidgetPage = const GoalRootPage();
+            //     });
+            //   },
+            // ),
           ],
         ),
       ),

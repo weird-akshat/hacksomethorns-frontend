@@ -3,6 +3,7 @@ import 'package:frontend/goal_tracking/entities/task.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/goal_tracking/widgets/graphview.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:provider/provider.dart';
 
@@ -129,11 +130,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                           themeProvider: themeProvider,
                         ),
                         SizedBox(height: 16),
-                        _buildTextField(
-                          controller: categoryController,
-                          label: 'Category',
-                          themeProvider: themeProvider,
-                        ),
+                        CategoryPicker(onCategorySelected: (cat) {}),
                         SizedBox(height: 16),
                         Row(
                           children: [
