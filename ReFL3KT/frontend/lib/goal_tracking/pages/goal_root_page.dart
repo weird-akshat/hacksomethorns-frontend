@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/api_methods/fetch_goal_tree.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/goal_tracking/pages/tree_screen.dart';
@@ -15,6 +16,9 @@ class GoalRootPage extends StatefulWidget {
 }
 
 class _GoalTrackingOuterScreenState extends State<GoalRootPage> {
+  bool _isLoading = true; // Track loading state
+  String? _error; // Track errors
+  final bool darkMode = true;
   List<TreeNode> list = [
     TreeNode(name: "goal 1"),
     TreeNode(
@@ -22,8 +26,28 @@ class _GoalTrackingOuterScreenState extends State<GoalRootPage> {
     ),
     TreeNode(name: "name")
   ];
-  final bool darkMode = true;
+  // final bool darkMode = true;
   final TextEditingController _goalController = TextEditingController();
+  void initState() {
+    super.initState();
+    _fetchGoals(); // Fetch goals on initialization
+  }
+
+  Future<void> _fetchGoals() async {
+    try {
+      final fetchedList = await fetchGoalTree("1"); // Pass actual user ID
+      setState(() {
+        list = fetchedList;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+      print('Error fetching goals: $e');
+    }
+  }
 
   @override
   void dispose() {
