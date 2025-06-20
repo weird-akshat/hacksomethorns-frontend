@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
 
 //takes offset from and to to draw the lines
@@ -11,9 +13,17 @@ class EdgeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: CustomPaint(
-        painter: LinePainter(p1: from, p2: to),
-        size: Size.infinite,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return CustomPaint(
+            painter: LinePainter(
+              p1: from,
+              p2: to,
+              isDarkMode: themeProvider.isDarkMode,
+            ),
+            size: Size.infinite,
+          );
+        },
       ),
     );
   }
@@ -21,21 +31,24 @@ class EdgeWidget extends StatelessWidget {
 
 class LinePainter extends CustomPainter {
   Offset p1, p2;
-  LinePainter({required this.p1, required this.p2});
+  bool isDarkMode;
+  LinePainter({required this.p1, required this.p2, required this.isDarkMode});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Simple black/white colors based on theme
     Paint paint = Paint()
-      ..color = Colors.white
+      ..color = (isDarkMode ? Colors.white : Colors.black).withOpacity(0.8)
       ..strokeWidth = edgeStrokeWidth
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
     final path = Path()..moveTo(p1.dx, p1.dy);
 
-    // Midpoint with a slight curve (adjust the +/- to change curvature)
+    // Simple curve
     Offset controlPoint = Offset(
       (p1.dx + p2.dx) / 2,
-      (p1.dy + p2.dy) / 2 + 160, // Curve upward; use +40 to curve downward
+      (p1.dy + p2.dy) / 2 + 60,
     );
 
     path.quadraticBezierTo(controlPoint.dx, controlPoint.dy, p2.dx, p2.dy);
@@ -44,6 +57,8 @@ class LinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant LinePainter oldDelegate) {
-    return p1 != oldDelegate.p1 || p2 != oldDelegate.p2;
+    return p1 != oldDelegate.p1 ||
+        p2 != oldDelegate.p2 ||
+        isDarkMode != oldDelegate.isDarkMode;
   }
 }

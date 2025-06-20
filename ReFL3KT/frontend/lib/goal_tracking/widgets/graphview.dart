@@ -20,74 +20,103 @@ class _GraphViewState extends State<GraphView> {
   List<Widget> edges = [];
   late Map<TreeNode, Offset> positions;
   final _transformationController = TransformationController();
+  late double stackWidth;
+  late double stackHeight;
+  int _widgetCounter = 0;
+
+  void _refreshLayout() {
+    goals.clear();
+    edges.clear();
+    _widgetCounter = 0;
+
+    positions = tidyTreeLayout(
+      widget.root,
+      rootPosition: Offset(MediaQuery.of(context).size.width / 2, 0),
+    );
+
+    verifyPosition(positions);
+
+    stackWidth = findTreeWidth(positions);
+    stackHeight =
+        findTreeHeight(widget.root) * levelSeparation + GOAL_WIDGET_HEIGHT;
+
+    setState(() => dfs(widget.root));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (positions.containsKey(widget.root)) {
+        final rootPos = positions[widget.root]!;
+        final screenSize = MediaQuery.of(context).size;
+        final dx = screenSize.width / 2 - (rootPos.dx + GOAL_WIDGET_WIDTH / 2);
+        final dy = 20.0;
+        _transformationController.value = Matrix4.identity()..translate(dx, dy);
+      }
+    });
+  }
+
+  void dfs(TreeNode node) {
+    goals.add(GoalWidget(
+      key: ValueKey('goal_${_widgetCounter++}_${identityHashCode(node)}'),
+      offset: positions[node]!,
+      treeNode: node,
+      onChildAdded: _refreshLayout,
+      onGoalDeleted: _refreshLayout,
+    ));
+
+    for (var child in node.children) {
+      edges.add(EdgeWidget(
+        from: positions[node]! +
+            Offset(GOAL_WIDGET_WIDTH / 2, GOAL_WIDGET_HEIGHT / 2),
+        to: positions[child]! +
+            Offset(GOAL_WIDGET_WIDTH / 2, GOAL_WIDGET_HEIGHT / 2),
+      ));
+      dfs(child);
+    }
+  }
 
   double findTreeWidth(Map<TreeNode, Offset> map) {
-    double max = 0;
-    double min = double.maxFinite;
+    if (map.isEmpty) return GOAL_WIDGET_WIDTH;
+
+    double maxX = 0;
+    double minX = double.infinity;
 
     for (var entry in map.entries) {
-      if (entry.value.dx > max) {
-        max = entry.value.dx;
-      } else if (entry.value.dx < min) {
-        min = entry.value.dx;
-      }
+      if (entry.value.dx > maxX) maxX = entry.value.dx;
+      if (entry.value.dx < minX) minX = entry.value.dx;
     }
-    return max + GOAL_WIDGET_WIDTH;
+
+    return (maxX - minX) + GOAL_WIDGET_WIDTH + 200;
   }
 
   int findTreeHeight(TreeNode node) {
-    if (node == null) {
-      return 0;
-    } else {
-      int max = 0;
-      for (TreeNode child in node.children) {
-        int x = findTreeHeight(child);
-        if (x > max) {
-          max = x;
-        }
-      }
-      return max + 1;
+    if (node.children.isEmpty) return 1;
+    int max = 0;
+    for (TreeNode child in node.children) {
+      int height = findTreeHeight(child);
+      if (height > max) max = height;
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
+    return max + 1;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    positions = tidyTreeLayout(widget.root,
-        rootPosition: Offset(MediaQuery.of(context).size.width / 2, 0));
+    _widgetCounter = 0;
+    positions = tidyTreeLayout(
+      widget.root,
+      rootPosition: Offset(MediaQuery.of(context).size.width / 2, 0),
+    );
     verifyPosition(positions);
-    stackWidth = findTreeWidth(positions) + GOAL_WIDGET_WIDTH;
-    stackHeight = (findTreeHeight(widget.root)) * levelSeparation;
-
+    stackWidth = findTreeWidth(positions);
+    stackHeight =
+        findTreeHeight(widget.root) * levelSeparation + GOAL_WIDGET_HEIGHT;
     dfs(widget.root);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rootPos = positions[widget.root]!;
       final screenSize = MediaQuery.of(context).size;
-
-// Center the root node on the screen
       final dx = screenSize.width / 2 - (rootPos.dx + GOAL_WIDGET_WIDTH / 2);
-      final dy = 20.0; // Optional vertical padding from top
-
+      final dy = 20.0;
       _transformationController.value = Matrix4.identity()..translate(dx, dy);
     });
-  }
-
-  void dfs(TreeNode node) {
-    goals.add(GoalWidget(offset: positions[node]!, treeNode: node));
-
-    for (var child in node.children) {
-      edges.add(EdgeWidget(
-          from: positions[node]! +
-              Offset(GOAL_WIDGET_WIDTH / 2, GOAL_WIDGET_HEIGHT / 2),
-          to: positions[child]! +
-              Offset(GOAL_WIDGET_WIDTH / 2, GOAL_WIDGET_HEIGHT / 2)));
-      dfs(child);
-    }
   }
 
   @override
@@ -100,22 +129,27 @@ class _GraphViewState extends State<GraphView> {
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh),
+              tooltip: 'Refresh',
+              onPressed: _refreshLayout, // This triggers the reload
+            ),
+          ],
         ),
         body: InteractiveViewer(
           transformationController: _transformationController,
           minScale: 0.0005,
-
           maxScale: 10,
-          // boundaryMargin: const EdgeInsets.all(2000),
-
           constrained: false,
           scaleEnabled: true,
           child: Align(
             alignment: Alignment.center,
             child: SizedBox(
-                width: stackWidth,
-                height: stackHeight,
-                child: Stack(children: edges + goals)),
+              width: stackWidth,
+              height: stackHeight,
+              child: Stack(children: edges + goals),
+            ),
           ),
         ),
       ),
@@ -128,15 +162,13 @@ class _RTTNode {
   _RTTNode? parent, leftSibling;
   List<_RTTNode> children = [];
   double prelim = 0, modifier = 0;
-  double? x, y; // Final positions
+  double? x, y;
   _RTTNode(this.treeNode);
 }
 
 bool verifyPosition(Map<TreeNode, Offset> map) {
   double minSeparation = GOAL_WIDGET_WIDTH + 150;
   bool changed = false;
-
-  // Group nodes by their vertical level (dy)
   Map<double, List<MapEntry<TreeNode, Offset>>> levels = {};
 
   for (var entry in map.entries) {
@@ -145,20 +177,16 @@ bool verifyPosition(Map<TreeNode, Offset> map) {
 
   final updated = Map<TreeNode, Offset>.from(map);
 
-  // For each vertical level
   for (var entries in levels.values) {
     entries.sort((a, b) => a.value.dx.compareTo(b.value.dx));
-
     for (int i = 1; i < entries.length; i++) {
       final prev = entries[i - 1];
       final curr = entries[i];
-
       double separation = curr.value.dx - updated[prev.key]!.dx;
 
       if (separation < minSeparation) {
         double shift = minSeparation - separation;
-        Offset newOffset = Offset(curr.value.dx + shift, curr.value.dy);
-        updated[curr.key] = newOffset;
+        updated[curr.key] = Offset(curr.value.dx + shift, curr.value.dy);
         changed = true;
       }
     }
@@ -188,6 +216,7 @@ Map<TreeNode, Offset> tidyTreeLayout(
   }
 
   final wrappedRoot = build(root, null);
+
   void moveSubtree(_RTTNode node, double shift) {
     node.prelim += shift;
     node.modifier += shift;
@@ -219,41 +248,29 @@ Map<TreeNode, Offset> tidyTreeLayout(
       vimLeft = vimLeft.children.isNotEmpty ? vimLeft.children.last : null;
       sip += vip.modifier;
       sim += vim.modifier;
-
       level++;
     }
   }
 
   void firstWalk(_RTTNode v) {
-    for (var c in v.children) {
-      firstWalk(c);
-    }
-
+    for (var c in v.children) firstWalk(c);
     if (v.children.isEmpty) {
       v.prelim = v.leftSibling == null
           ? 0
           : v.leftSibling!.prelim + GOAL_WIDGET_WIDTH + siblingSeparation;
     } else if (v.children.length == 1) {
-      final child = v.children.first;
-      v.prelim = child.prelim;
+      v.prelim = v.children.first.prelim;
     } else {
-      final first = v.children.first;
-      final last = v.children.last;
-      v.prelim = (first.prelim + last.prelim) / 2;
+      v.prelim = (v.children.first.prelim + v.children.last.prelim) / 2;
     }
-
-    if (v.leftSibling != null) {
-      apportion(v);
-    }
+    if (v.leftSibling != null) apportion(v);
   }
 
   void secondWalk(_RTTNode v, double modSum, int depth, double xOffset) {
     final x = v.prelim + modSum + xOffset - GOAL_WIDGET_WIDTH / 2;
     final y = rootPosition.dy + levelSeparation * depth;
-
     v.x = x;
     v.y = y;
-
     for (var c in v.children) {
       secondWalk(c, modSum + v.modifier, depth + 1, xOffset);
     }
@@ -267,13 +284,11 @@ Map<TreeNode, Offset> tidyTreeLayout(
     return minX;
   }
 
-  // Run layout
   firstWalk(wrappedRoot);
   final minX = findMinX(wrappedRoot, 0);
   final xOffset = rootPosition.dx - minX;
   secondWalk(wrappedRoot, 0, 0, xOffset);
 
-  // Collect results
   final Map<TreeNode, Offset> result = {};
   void collect(_RTTNode v) {
     result[v.treeNode] = Offset(v.x!, v.y!);

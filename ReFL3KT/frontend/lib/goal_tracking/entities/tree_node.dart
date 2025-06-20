@@ -1,20 +1,28 @@
 class TreeNode {
+  String name;
+  TreeNode({required this.name});
   TreeNode? parent;
   List<TreeNode> children = [];
 
   void addChild(TreeNode node) {
     children.add(node);
+    node.parent = this;
   }
 
   void addChildren(List<TreeNode> list) {
-    children.addAll(list);
+    for (var node in list) {
+      addChild(node);
+    }
   }
 
   void removeChild(TreeNode node) {
     children.remove(node);
+    node.parent = null;
   }
 
-  void changeParent(TreeNode parent) {
-    this.parent = parent;
+  void changeParent(TreeNode newParent) {
+    parent?.children.remove(this);
+    parent = newParent;
+    newParent.children.add(this);
   }
 }

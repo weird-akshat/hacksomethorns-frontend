@@ -10,19 +10,19 @@ class TreeScreen extends StatefulWidget {
 }
 
 class _TreeScreenState extends State<TreeScreen> {
-  TreeNode node1 = TreeNode();
-  TreeNode node2 = TreeNode();
-  TreeNode node3 = TreeNode();
-  TreeNode node4 = TreeNode();
-  TreeNode node5 = TreeNode();
-  TreeNode node6 = TreeNode();
-  TreeNode node7 = TreeNode();
-  TreeNode node8 = TreeNode();
-  TreeNode node9 = TreeNode();
-  TreeNode node10 = TreeNode();
-  TreeNode node11 = TreeNode();
-  TreeNode node12 = TreeNode();
-  TreeNode node13 = TreeNode();
+  TreeNode node1 = TreeNode(name: "Goal");
+  TreeNode node2 = TreeNode(name: "Goal");
+  TreeNode node3 = TreeNode(name: "Goal");
+  TreeNode node4 = TreeNode(name: "Goal");
+  TreeNode node5 = TreeNode(name: "Goal");
+  TreeNode node6 = TreeNode(name: "Goal");
+  TreeNode node7 = TreeNode(name: "Goal");
+  TreeNode node8 = TreeNode(name: "Goal");
+  TreeNode node9 = TreeNode(name: "Goal");
+  TreeNode node10 = TreeNode(name: "Goal");
+  TreeNode node11 = TreeNode(name: "Goal");
+  TreeNode node12 = TreeNode(name: "Goal");
+  TreeNode node13 = TreeNode(name: "Goal");
 
   @override
   void initState() {

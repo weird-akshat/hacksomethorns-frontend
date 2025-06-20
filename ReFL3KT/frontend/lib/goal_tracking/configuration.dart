@@ -11,40 +11,34 @@ late double edgeStrokeWidth;
 late double GOAL_WIDGET_WIDTH;
 
 bool _isConfigInitialized = false;
+
 void initConfig() {
   if (_isConfigInitialized) return;
   _isConfigInitialized = true;
 
   if (kIsWeb) {
     // Web-specific config
-
-    siblingSeparation = 400;
-    subtreeSeparation = 400;
-    levelSeparation = 400;
-    GOAL_WIDGET_HEIGHT = 100;
-    GOAL_WIDGET_WIDTH = 200;
-    edgeStrokeWidth = 20;
+    siblingSeparation = 300;
+    subtreeSeparation = 350;
+    levelSeparation = 280;
+    GOAL_WIDGET_HEIGHT = 120;
+    GOAL_WIDGET_WIDTH = 220;
+    edgeStrokeWidth = 3;
   } else if (Platform.isAndroid || Platform.isIOS) {
-    siblingSeparation = 200;
-    subtreeSeparation = 200;
-    levelSeparation = 200;
-    GOAL_WIDGET_HEIGHT = 50;
-    GOAL_WIDGET_WIDTH = 150;
-    edgeStrokeWidth = 10;
+    // Mobile-optimized config
+    siblingSeparation = 40;
+    subtreeSeparation = 180;
+    levelSeparation = 180;
+    GOAL_WIDGET_HEIGHT = 40;
+    GOAL_WIDGET_WIDTH = 140;
+    edgeStrokeWidth = 1.25;
   } else {
-    siblingSeparation = 600;
-    subtreeSeparation = 700;
-    levelSeparation = 300;
-    GOAL_WIDGET_HEIGHT = 60;
-    GOAL_WIDGET_WIDTH = 100;
-    edgeStrokeWidth = 10;
-  }
-  if (Platform.isAndroid || Platform.isIOS) {
-    siblingSeparation = 200;
-    subtreeSeparation = 200;
+    // Desktop config
+    siblingSeparation = 400;
+    subtreeSeparation = 450;
     levelSeparation = 200;
-    GOAL_WIDGET_HEIGHT = 50;
-    GOAL_WIDGET_WIDTH = 150;
-    edgeStrokeWidth = 10;
+    GOAL_WIDGET_HEIGHT = 100;
+    GOAL_WIDGET_WIDTH = 180;
+    edgeStrokeWidth = 3;
   }
 }
