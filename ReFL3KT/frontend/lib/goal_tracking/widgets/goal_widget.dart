@@ -9,6 +9,9 @@ class GoalWidget extends StatefulWidget {
   final Offset offset;
   final VoidCallback? onChildAdded;
   final VoidCallback? onGoalDeleted;
+  final VoidCallback? onGoalUpdated;
+  final VoidCallback? onParentChanged;
+  final List<TreeNode>? availableParents;
 
   const GoalWidget({
     super.key,
@@ -16,6 +19,9 @@ class GoalWidget extends StatefulWidget {
     required this.treeNode,
     this.onChildAdded,
     this.onGoalDeleted,
+    this.onGoalUpdated,
+    this.onParentChanged,
+    this.availableParents,
   });
 
   @override
@@ -105,6 +111,30 @@ class _GoalState extends State<GoalWidget> {
                     foregroundColor: Colors.white,
                   ),
                 ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showChangeParentDialog();
+                  },
+                  icon: Icon(Icons.swap_vert),
+                  label: Text('Change Parent'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showUpdateGoalDialog();
+                  },
+                  icon: Icon(Icons.edit),
+                  label: Text('Update Goal'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
               ],
             );
           },
@@ -177,16 +207,12 @@ class _GoalState extends State<GoalWidget> {
   }
 
   void _deleteGoal() {
-    print(widget.treeNode.parent);
     if (widget.treeNode.parent != null) {
       widget.treeNode.parent!.removeChild(widget.treeNode);
     }
-    print(widget.treeNode.parent);
-
     if (widget.onGoalDeleted != null) {
       widget.onGoalDeleted!();
     }
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Goal "${widget.treeNode.name}" deleted successfully!'),
@@ -198,7 +224,6 @@ class _GoalState extends State<GoalWidget> {
 
   void _showCreateChildDialog() {
     final nameController = TextEditingController();
-    final descriptionController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -253,10 +278,7 @@ class _GoalState extends State<GoalWidget> {
                 ElevatedButton(
                   onPressed: () {
                     if (nameController.text.trim().isNotEmpty) {
-                      _createChildGoal(
-                        nameController.text.trim(),
-                        descriptionController.text.trim(),
-                      );
+                      _createChildGoal(nameController.text.trim());
                       Navigator.pop(context);
                     }
                   },
@@ -274,7 +296,7 @@ class _GoalState extends State<GoalWidget> {
     );
   }
 
-  void _createChildGoal(String name, String description) {
+  void _createChildGoal(String name) {
     final childNode = TreeNode(name: name);
     widget.treeNode.addChild(childNode);
 
@@ -288,6 +310,172 @@ class _GoalState extends State<GoalWidget> {
         backgroundColor: Colors.green,
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+
+  void _showChangeParentDialog() {
+    TreeNode? selectedParent = widget.treeNode.parent;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              backgroundColor: themeProvider.isDarkMode
+                  ? Colors.grey.shade900
+                  : Colors.white,
+              title: Text(
+                'Change Parent',
+                style: TextStyle(
+                  color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: DropdownButton<TreeNode>(
+                value: selectedParent,
+                isExpanded: true,
+                items: (widget.availableParents ?? [])
+                    .where((node) => node != widget.treeNode)
+                    .map((node) {
+                  return DropdownMenuItem<TreeNode>(
+                    value: node,
+                    child: Text(node.name ?? 'Unnamed'),
+                  );
+                }).toList(),
+                onChanged: (TreeNode? newValue) {
+                  setState(() {
+                    selectedParent = newValue;
+                  });
+                },
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode
+                          ? Colors.white70
+                          : Colors.black54,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: selectedParent != null &&
+                          selectedParent != widget.treeNode.parent
+                      ? () {
+                          if (widget.treeNode.parent != null) {
+                            widget.treeNode.parent!
+                                .removeChild(widget.treeNode);
+                          }
+                          selectedParent!.addChild(widget.treeNode);
+                          setState(() {});
+                          Navigator.pop(context);
+
+                          if (widget.onParentChanged != null) {
+                            widget.onParentChanged!();
+                          }
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Parent changed successfully!'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Change'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showUpdateGoalDialog() {
+    final nameController = TextEditingController(text: widget.treeNode.name);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              backgroundColor: themeProvider.isDarkMode
+                  ? Colors.grey.shade900
+                  : Colors.white,
+              title: Text(
+                'Update Goal Name',
+                style: TextStyle(
+                  color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: TextField(
+                controller: nameController,
+                style: TextStyle(
+                  color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Goal Name',
+                  labelStyle: TextStyle(
+                    color: themeProvider.isDarkMode
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode
+                          ? Colors.white70
+                          : Colors.black54,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.trim().isNotEmpty) {
+                      setState(() {
+                        widget.treeNode.name = nameController.text.trim();
+                      });
+                      Navigator.pop(context);
+
+                      if (widget.onGoalUpdated != null) {
+                        widget.onGoalUpdated!();
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Goal name updated!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
