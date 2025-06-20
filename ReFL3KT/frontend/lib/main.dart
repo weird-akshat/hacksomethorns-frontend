@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
+import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
 import 'package:frontend/goal_tracking/pages/tree_screen.dart';
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
@@ -46,7 +47,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: TreeScreen(),
+          home: GoalRootPage(),
           theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,

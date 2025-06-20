@@ -1,9 +1,8 @@
-// Enhanced ThemeProvider with your configuration
 import 'package:flutter/material.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 
 class ThemeProvider with ChangeNotifier {
-  bool _isDarkMode = true; // Default to dark mode
+  bool _isDarkMode = true;
 
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
   bool get isDarkMode => _isDarkMode;
@@ -18,7 +17,6 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper methods to get current theme colors
   Color get scaffoldColor =>
       _isDarkMode ? scaffoldColorDark : scaffoldColorLight;
   Color get cardColor =>

@@ -1,12 +1,210 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/goal_tracking/pages/goal_report_screen.dart';
-import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
-import 'package:frontend/providers/theme_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
+import 'package:frontend/goal_tracking/pages/tree_screen.dart';
+import 'package:frontend/goal_tracking/widgets/goal_widget.dart';
+import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/time_tracking/time_tracking_analysis/pages/configuration.dart';
+import 'package:provider/provider.dart';
 
-class GoalWidget extends StatefulWidget {
+class GoalRootPage extends StatefulWidget {
+  const GoalRootPage({super.key});
+
+  @override
+  State<GoalRootPage> createState() => _GoalTrackingOuterScreenState();
+}
+
+class _GoalTrackingOuterScreenState extends State<GoalRootPage> {
+  List<TreeNode> list = [
+    TreeNode(name: "goal 1"),
+    TreeNode(
+      name: "goal2",
+    ),
+    TreeNode(name: "name")
+  ];
+  final bool darkMode = true;
+  final TextEditingController _goalController = TextEditingController();
+
+  @override
+  void dispose() {
+    _goalController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.grey[600],
+        elevation: 2,
+        centerTitle: true,
+        title: const Text(
+          'Main Goals',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.black, size: 28),
+            onPressed: () {
+              _showPopupScreen();
+            },
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Center(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: list.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 20),
+            itemBuilder: (context, index) {
+              TreeNode goal = list[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (builder) => TreeScreen(node: goal)));
+                },
+                child: RootGoalWidget(
+                  treeNode: goal,
+                  offset: Offset(
+                      MediaQuery.of(context).size.width / 2,
+                      MediaQuery.of(context).size.height *
+                          (index + 1) /
+                          (list.length + 1)),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPopupScreen() {
+    _goalController.clear();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2D3748),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: Colors.white.withOpacity(0.15),
+              width: 1,
+            ),
+          ),
+          title: const Text(
+            'Add New Goal',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          content: Container(
+            constraints: const BoxConstraints(minWidth: 300),
+            child: TextField(
+              controller: _goalController,
+              autofocus: true,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter your goal...',
+                hintStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 16,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.white,
+                    width: 1.5,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (_goalController.text.trim().isNotEmpty) {
+                  setState(() {
+                    list.add(TreeNode(name: _goalController.text.trim()));
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[600],
+                foregroundColor: Colors.black,
+                elevation: 2,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Add Goal',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class RootGoalWidget extends StatefulWidget {
   final TreeNode treeNode;
   final Offset offset;
   final VoidCallback? onChildAdded;
@@ -15,7 +213,7 @@ class GoalWidget extends StatefulWidget {
   final VoidCallback? onParentChanged;
   final List<TreeNode>? availableParents;
 
-  const GoalWidget({
+  const RootGoalWidget({
     super.key,
     required this.offset,
     required this.treeNode,
@@ -27,10 +225,10 @@ class GoalWidget extends StatefulWidget {
   });
 
   @override
-  State<GoalWidget> createState() => _GoalState();
+  State<RootGoalWidget> createState() => _GoalState();
 }
 
-class _GoalState extends State<GoalWidget> {
+class _GoalState extends State<RootGoalWidget> {
   late double left, top;
   bool isDragging = false;
 
@@ -42,7 +240,7 @@ class _GoalState extends State<GoalWidget> {
   }
 
   @override
-  void didUpdateWidget(GoalWidget oldWidget) {
+  void didUpdateWidget(RootGoalWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.offset != widget.offset && !isDragging) {
       setState(() {
@@ -215,6 +413,7 @@ class _GoalState extends State<GoalWidget> {
     if (widget.onGoalDeleted != null) {
       widget.onGoalDeleted!();
     }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Goal "${widget.treeNode.name}" deleted successfully!'),
@@ -489,11 +688,7 @@ class _GoalState extends State<GoalWidget> {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (builder) =>
-                      GoalReportScreen(goal: widget.treeNode)));
-            },
+            behavior: HitTestBehavior.translucent,
             onPanStart: (_) => isDragging = true,
             onPanUpdate: (details) {
               setState(() {
