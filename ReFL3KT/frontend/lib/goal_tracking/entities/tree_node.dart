@@ -35,7 +35,7 @@ class TreeNode {
     newParent.children.add(this);
   }
 
-  Map<String, dynamic> toJson(int userId) {
+  Map<String, dynamic> toJson(String userId) {
     return {
       'name': name,
       'description': description ?? '',

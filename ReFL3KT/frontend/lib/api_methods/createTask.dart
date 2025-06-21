@@ -6,7 +6,11 @@ import 'package:http/http.dart' as http;
 
 Future<Task> createTask(String userId, int goalId, Task task) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse('${apiUrl}users/$userId/goals/$goalId/tasks/');
+  final uri = Uri.parse('${apiUrl}api/users/$userId/goals/$goalId/tasks/');
+  print(uri);
+  // print(uri);
+
+  print("post");
 
   final response = await http.post(
     uri,
@@ -21,7 +25,7 @@ Future<Task> createTask(String userId, int goalId, Task task) async {
       'estimated_time': (task.timeSpent * 60).toInt(),
     }),
   );
-
+  print(response.body);
   if (response.statusCode == 201 || response.statusCode == 200) {
     final Map<String, dynamic> data = jsonDecode(response.body);
     return Task.fromJson(data);

@@ -20,7 +20,7 @@ class GoalWidget extends StatefulWidget {
   final VoidCallback? onGoalUpdated;
   final VoidCallback? onParentChanged;
   final List<TreeNode>? availableParents;
-  final int userId; // Added userId
+  final String userId; // Added userId
 
   const GoalWidget({
     super.key,

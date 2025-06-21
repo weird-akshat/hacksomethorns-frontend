@@ -55,7 +55,7 @@ class _GraphViewState extends State<GraphView> {
 
   void dfs(TreeNode node) {
     goals.add(GoalWidget(
-      userId: 1,
+      userId: "1",
       key: ValueKey('goal_${_widgetCounter++}_${identityHashCode(node)}'),
       offset: positions[node]!,
       treeNode: node,

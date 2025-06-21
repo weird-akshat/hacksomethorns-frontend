@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:http/http.dart' as http;
 
-Future<void> postGoalFromTreeNode(TreeNode node, int userId) async {
+Future<void> postGoalFromTreeNode(TreeNode node, String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
   final uri = Uri.parse('$apiUrl/users/$userId//goals/');
 

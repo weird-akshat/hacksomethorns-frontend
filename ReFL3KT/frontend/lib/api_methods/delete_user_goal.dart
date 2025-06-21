@@ -1,7 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-Future<void> deleteUserGoal({required int userId, required int goalId}) async {
+Future<void> deleteUserGoal(
+    {required String userId, required int goalId}) async {
   final baseUrl = dotenv.env['API_URL'];
   final url = Uri.parse('${baseUrl}api/users/$userId/goals/$goalId/');
 

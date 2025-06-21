@@ -4,12 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 Future<TreeNode> updateGoalFromNode({
-  required int userId,
+  required String userId,
   required int goalId,
   required TreeNode node,
 }) async {
   final baseUrl = dotenv.env['API_URL'];
-  final url = Uri.parse('${baseUrl}api/users/$userId/goals/$goalId/');
+  final url = Uri.parse('${baseUrl}api/users/{$userId}/goals/{$goalId}/');
 
   final response = await http.put(
     url,

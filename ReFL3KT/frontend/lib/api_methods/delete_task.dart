@@ -8,7 +8,8 @@ Future<void> deleteTask({
   required String taskId,
 }) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse('${apiUrl}users/$userId/goals/$goalId/tasks/$taskId/');
+  final uri =
+      Uri.parse('${apiUrl}api/users/$userId/goals/$goalId/tasks/$taskId/');
 
   final response = await http.delete(uri);
 

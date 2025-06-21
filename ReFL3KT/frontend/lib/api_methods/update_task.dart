@@ -10,7 +10,9 @@ Future<Task> updateTask({
 }) async {
   final String apiUrl = dotenv.env['API_URL']!;
   final uri =
-      Uri.parse('$apiUrl/users/${userId}goals/$goalId/tasks/${task.id}/');
+      Uri.parse('${apiUrl}api/users/${userId}/goals/$goalId/tasks/${task.id}/');
+
+  print(uri);
 
   final body = jsonEncode({
     'title': task.name,
@@ -31,7 +33,7 @@ Future<Task> updateTask({
     headers: {'Content-Type': 'application/json'},
     body: body,
   );
-
+  print(response.body);
   if (response.statusCode == 200) {
     return Task.fromJson(jsonDecode(response.body));
   } else {
