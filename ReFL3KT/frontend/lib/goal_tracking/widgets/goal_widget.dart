@@ -122,18 +122,18 @@ class _GoalState extends State<GoalWidget> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showChangeParentDialog();
-                  },
-                  icon: Icon(Icons.swap_vert),
-                  label: Text('Change Parent'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+                // ElevatedButton.icon(
+                //   onPressed: () {
+                //     Navigator.pop(context);
+                //     _showChangeParentDialog();
+                //   },
+                //   icon: Icon(Icons.swap_vert),
+                //   label: Text('Change Parent'),
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.orange,
+                //     foregroundColor: Colors.white,
+                //   ),
+                // ),
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
@@ -287,10 +287,10 @@ class _GoalState extends State<GoalWidget> {
                           decoration: InputDecoration(labelText: 'Goal Name'),
                         ),
                         SizedBox(height: 8),
-                        TextField(
-                          controller: descriptionController,
-                          decoration: InputDecoration(labelText: 'Description'),
-                        ),
+                        // TextField(
+                        //   controller: descriptionController,
+                        //   decoration: InputDecoration(labelText: 'Description'),
+                        // ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: priority,
@@ -340,16 +340,16 @@ class _GoalState extends State<GoalWidget> {
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: isGroupGoal,
-                              onChanged: (val) =>
-                                  setState(() => isGroupGoal = val!),
-                            ),
-                            Text('Is Group Goal'),
-                          ],
-                        ),
+                        // Row(
+                        //   children: [
+                        //     Checkbox(
+                        //       value: isGroupGoal,
+                        //       onChanged: (val) =>
+                        //           setState(() => isGroupGoal = val!),
+                        //     ),
+                        //     Text('Is Group Goal'),
+                        //   ],
+                        // ),
                       ],
                     ),
                   ),
@@ -372,10 +372,10 @@ class _GoalState extends State<GoalWidget> {
                             id: 0,
                             name: nameController.text.trim(),
                           )
-                            ..description = descriptionController.text
+                            ..description = ''
                             ..priority = priority
                             ..status = status
-                            ..deadline = deadline?.toIso8601String()
+                            ..deadline = deadline
                             ..isGroupGoal = isGroupGoal
                             ..parentId = widget.treeNode.id;
 
@@ -516,9 +516,8 @@ class _GoalState extends State<GoalWidget> {
         TextEditingController(text: widget.treeNode.description ?? '');
     String priority = widget.treeNode.priority;
     String status = widget.treeNode.status;
-    DateTime? deadline = widget.treeNode.deadline != null
-        ? DateTime.tryParse(widget.treeNode.deadline!)
-        : null;
+    DateTime? deadline =
+        widget.treeNode.deadline != null ? (widget.treeNode.deadline!) : null;
     bool isGroupGoal = widget.treeNode.isGroupGoal;
 
     showDialog(
@@ -550,10 +549,10 @@ class _GoalState extends State<GoalWidget> {
                           decoration: InputDecoration(labelText: 'Goal Name'),
                         ),
                         SizedBox(height: 8),
-                        TextField(
-                          controller: descriptionController,
-                          decoration: InputDecoration(labelText: 'Description'),
-                        ),
+                        // TextField(
+                        //   controller: descriptionController,
+                        //   decoration: InputDecoration(labelText: 'Description'),
+                        // ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: priority,
@@ -632,12 +631,10 @@ class _GoalState extends State<GoalWidget> {
                       onPressed: () async {
                         if (nameController.text.trim().isNotEmpty) {
                           widget.treeNode.name = nameController.text.trim();
-                          widget.treeNode.description =
-                              descriptionController.text;
+                          widget.treeNode.description = '';
                           widget.treeNode.priority = priority;
                           widget.treeNode.status = status;
-                          widget.treeNode.deadline =
-                              deadline?.toIso8601String();
+                          widget.treeNode.deadline = deadline;
                           widget.treeNode.isGroupGoal = isGroupGoal;
 
                           try {
@@ -762,7 +759,7 @@ class _GoalState extends State<GoalWidget> {
                     SizedBox(height: 4),
                     if (widget.treeNode.deadline != null)
                       Text(
-                        'Deadline: ${widget.treeNode.deadline!.split('T')[0]}',
+                        'Deadline: ${widget.treeNode.deadline!.toString().split('T')[0]}',
                         style: TextStyle(
                           fontSize: 9,
                           color: themeProvider.isDarkMode

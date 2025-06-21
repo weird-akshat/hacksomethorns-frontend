@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 Future<List<TreeNode>> fetchGoalTree(String userId) async {
   print("a");
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse("${apiUrl}api/users/$userId/goals");
+
+  final uri = Uri.parse("${apiUrl}api/users/$userId/goals/");
+  print(uri);
   final response = await http.get(uri);
 
   if (response.statusCode == 200) {

@@ -10,7 +10,7 @@ class TreeNode {
   int? parentId; // goal ID of parent (
   String status = 'active';
   String priority = 'medium';
-  String? deadline; // ISO 8601 string
+  DateTime? deadline; // ISO 8601 string
   bool isGroupGoal = false;
 
   void addChild(TreeNode node) {
@@ -35,16 +35,15 @@ class TreeNode {
     newParent.children.add(this);
   }
 
-  Map<String, dynamic> toJson(String userId) {
+  Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'description': description ?? '',
-      'id': id,
-      'user': userId,
-      'parent': parentId,
-      'status': status == "active" ? "not_started" : "completed",
-      'priority': priority,
-      'deadline': deadline,
+      "name": name,
+      "description": description?.isEmpty == true ? null : description,
+      "user": '1',
+      "parent": parentId,
+      "priority": priority,
+      "deadline": deadline?.toIso8601String(),
+      "is_group_goal": isGroupGoal,
     };
   }
 

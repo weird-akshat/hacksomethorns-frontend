@@ -9,7 +9,7 @@ Future<TreeNode> postGoalFromTreeNode(TreeNode node, String userId) async {
   final response = await http.post(
     uri,
     headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(node.toJson(userId)),
+    body: jsonEncode(node.toJson()),
   );
 
   if (response.statusCode != 201) {
