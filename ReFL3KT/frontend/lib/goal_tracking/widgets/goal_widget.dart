@@ -13,14 +13,13 @@ import 'package:http/http.dart' as http;
 
 class GoalWidget extends StatefulWidget {
   final TreeNode treeNode;
-  // final TreeNode id;
   final Offset offset;
   final VoidCallback? onChildAdded;
   final VoidCallback? onGoalDeleted;
   final VoidCallback? onGoalUpdated;
   final VoidCallback? onParentChanged;
   final List<TreeNode>? availableParents;
-  final String userId; // Added userId
+  final String userId;
 
   const GoalWidget({
     super.key,
@@ -31,8 +30,7 @@ class GoalWidget extends StatefulWidget {
     this.onGoalUpdated,
     this.onParentChanged,
     this.availableParents,
-    // this.id,
-    required this.userId, // Required for API calls
+    required this.userId,
   });
 
   @override
@@ -42,6 +40,7 @@ class GoalWidget extends StatefulWidget {
 class _GoalState extends State<GoalWidget> {
   late double left, top;
   bool isDragging = false;
+  // bool isDeleting = false; // For delete button
 
   @override
   void initState() {
@@ -122,18 +121,6 @@ class _GoalState extends State<GoalWidget> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                // ElevatedButton.icon(
-                //   onPressed: () {
-                //     Navigator.pop(context);
-                //     _showChangeParentDialog();
-                //   },
-                //   icon: Icon(Icons.swap_vert),
-                //   label: Text('Change Parent'),
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: Colors.orange,
-                //     foregroundColor: Colors.white,
-                //   ),
-                // ),
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
@@ -160,56 +147,109 @@ class _GoalState extends State<GoalWidget> {
       builder: (BuildContext context) {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
-            return AlertDialog(
-              backgroundColor: themeProvider.isDarkMode
-                  ? Colors.grey.shade900
-                  : Colors.white,
-              title: Text(
-                'Delete Goal',
-                style: TextStyle(
-                  color: themeProvider.isDarkMode ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Are you sure you want to delete "${widget.treeNode.name}"?',
+            bool isDeleting = false;
+            return StatefulBuilder(
+              builder: (context, setState) {
+                // bool isDeleting = false; // Local loading state for delete
+                return AlertDialog(
+                  backgroundColor: themeProvider.isDarkMode
+                      ? Colors.grey.shade900
+                      : Colors.white,
+                  title: Text(
+                    'Delete Goal',
                     style: TextStyle(
                       color: themeProvider.isDarkMode
-                          ? Colors.white70
-                          : Colors.black87,
+                          ? Colors.white
+                          : Colors.black,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: themeProvider.isDarkMode
-                          ? Colors.white70
-                          : Colors.black54,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Are you sure you want to delete "${widget.treeNode.name}"?',
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode
+                              ? Colors.white70
+                              : Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      if (isDeleting)
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: themeProvider.isDarkMode
+                                    ? Colors.white70
+                                    : Colors.black54,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Deleting goal...',
+                              style: TextStyle(
+                                color: themeProvider.isDarkMode
+                                    ? Colors.white70
+                                    : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          isDeleting ? null : () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _deleteGoal();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text('Delete'),
-                ),
-              ],
+                    ElevatedButton(
+                      onPressed: isDeleting
+                          ? null
+                          : () async {
+                              setState(() => isDeleting = true);
+                              try {
+                                await _deleteGoal();
+                                Navigator.pop(context);
+                              } catch (e) {
+                                // Error is already handled in _deleteGoal
+                              } finally {
+                                if (mounted) {
+                                  setState(() => isDeleting = false);
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: isDeleting
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('Delete'),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -232,21 +272,27 @@ class _GoalState extends State<GoalWidget> {
         widget.onGoalDeleted!();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Goal "${widget.treeNode.name}" deleted successfully!'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('Goal "${widget.treeNode.name}" deleted successfully!'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to delete goal: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete goal: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      rethrow; // Re-throw to handle in the calling function
     }
   }
 
@@ -257,10 +303,11 @@ class _GoalState extends State<GoalWidget> {
     String status = 'active';
     DateTime? deadline;
     bool isGroupGoal = false;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        bool isLoading = false;
+
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return StatefulBuilder(
@@ -285,12 +332,9 @@ class _GoalState extends State<GoalWidget> {
                         TextField(
                           controller: nameController,
                           decoration: InputDecoration(labelText: 'Goal Name'),
+                          enabled: !isLoading, // Disable during loading
                         ),
                         SizedBox(height: 8),
-                        // TextField(
-                        //   controller: descriptionController,
-                        //   decoration: InputDecoration(labelText: 'Description'),
-                        // ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: priority,
@@ -301,7 +345,9 @@ class _GoalState extends State<GoalWidget> {
                                     child: Text(e),
                                   ))
                               .toList(),
-                          onChanged: (val) => setState(() => priority = val!),
+                          onChanged: isLoading
+                              ? null
+                              : (val) => setState(() => priority = val!),
                         ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
@@ -313,7 +359,9 @@ class _GoalState extends State<GoalWidget> {
                                     child: Text(e),
                                   ))
                               .toList(),
-                          onChanged: (val) => setState(() => status = val!),
+                          onChanged: isLoading
+                              ? null
+                              : (val) => setState(() => status = val!),
                         ),
                         SizedBox(height: 8),
                         Row(
@@ -326,36 +374,55 @@ class _GoalState extends State<GoalWidget> {
                             Spacer(),
                             IconButton(
                               icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (picked != null) {
-                                  setState(() => deadline = picked);
-                                }
-                              },
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now(),
+                                        firstDate: DateTime(2000),
+                                        lastDate: DateTime(2100),
+                                      );
+                                      if (picked != null) {
+                                        setState(() => deadline = picked);
+                                      }
+                                    },
                             ),
                           ],
                         ),
-                        // Row(
-                        //   children: [
-                        //     Checkbox(
-                        //       value: isGroupGoal,
-                        //       onChanged: (val) =>
-                        //           setState(() => isGroupGoal = val!),
-                        //     ),
-                        //     Text('Is Group Goal'),
-                        //   ],
-                        // ),
+                        if (isLoading) ...[
+                          SizedBox(height: 16),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: themeProvider.isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Creating goal...',
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed:
+                          isLoading ? null : () => Navigator.pop(context),
                       child: Text(
                         'Cancel',
                         style: TextStyle(
@@ -366,53 +433,74 @@ class _GoalState extends State<GoalWidget> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (nameController.text.trim().isNotEmpty) {
-                          final childNode = TreeNode(
-                            id: 0,
-                            name: nameController.text.trim(),
-                          )
-                            ..description = ''
-                            ..priority = priority
-                            ..status = status
-                            ..deadline = deadline
-                            ..isGroupGoal = isGroupGoal
-                            ..parentId = widget.treeNode.id;
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (nameController.text.trim().isNotEmpty) {
+                                setState(() => isLoading = true);
+                                final childNode = TreeNode(
+                                  id: 0,
+                                  name: nameController.text.trim(),
+                                )
+                                  ..description = ''
+                                  ..priority = priority
+                                  ..status = status
+                                  ..deadline = deadline
+                                  ..isGroupGoal = isGroupGoal
+                                  ..parentId = widget.treeNode.id;
 
-                          try {
-                            final TreeNode returnedGoal =
-                                await postGoalFromTreeNode(
-                              childNode,
-                              widget.userId,
-                            );
-                            widget.treeNode.addChild(childNode);
-                            if (widget.onChildAdded != null) {
-                              widget.onChildAdded!();
-                              childNode.id = returnedGoal.id;
-                              childNode.name = returnedGoal.name;
-                            }
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Child goal created!'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to create goal: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
+                                try {
+                                  final TreeNode returnedGoal =
+                                      await postGoalFromTreeNode(
+                                    childNode,
+                                    widget.userId,
+                                  );
+                                  widget.treeNode.addChild(childNode);
+                                  if (widget.onChildAdded != null) {
+                                    widget.onChildAdded!();
+                                    childNode.id = returnedGoal.id;
+                                    childNode.name = returnedGoal.name;
+                                  }
+                                  Navigator.pop(context);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Child goal created!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('Failed to create goal: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => isLoading = false);
+                                  }
+                                }
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
-                      child: Text('Create'),
+                      child: isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('Create'),
                     ),
                   ],
                 );
@@ -482,7 +570,6 @@ class _GoalState extends State<GoalWidget> {
                           selectedParent!.addChild(widget.treeNode);
                           setState(() {});
                           Navigator.pop(context);
-
                           if (widget.onParentChanged != null) {
                             widget.onParentChanged!();
                           }
@@ -519,10 +606,11 @@ class _GoalState extends State<GoalWidget> {
     DateTime? deadline =
         widget.treeNode.deadline != null ? (widget.treeNode.deadline!) : null;
     bool isGroupGoal = widget.treeNode.isGroupGoal;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        bool isLoading = false;
+
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return StatefulBuilder(
@@ -547,12 +635,9 @@ class _GoalState extends State<GoalWidget> {
                         TextField(
                           controller: nameController,
                           decoration: InputDecoration(labelText: 'Goal Name'),
+                          enabled: !isLoading, // Disable during loading
                         ),
                         SizedBox(height: 8),
-                        // TextField(
-                        //   controller: descriptionController,
-                        //   decoration: InputDecoration(labelText: 'Description'),
-                        // ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: priority,
@@ -563,7 +648,9 @@ class _GoalState extends State<GoalWidget> {
                                     child: Text(e),
                                   ))
                               .toList(),
-                          onChanged: (val) => setState(() => priority = val!),
+                          onChanged: isLoading
+                              ? null
+                              : (val) => setState(() => priority = val!),
                         ),
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
@@ -575,7 +662,9 @@ class _GoalState extends State<GoalWidget> {
                                     child: Text(e),
                                   ))
                               .toList(),
-                          onChanged: (val) => setState(() => status = val!),
+                          onChanged: isLoading
+                              ? null
+                              : (val) => setState(() => status = val!),
                         ),
                         SizedBox(height: 8),
                         Row(
@@ -588,36 +677,55 @@ class _GoalState extends State<GoalWidget> {
                             Spacer(),
                             IconButton(
                               icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: deadline ?? DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (picked != null) {
-                                  setState(() => deadline = picked);
-                                }
-                              },
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: deadline ?? DateTime.now(),
+                                        firstDate: DateTime(2000),
+                                        lastDate: DateTime(2100),
+                                      );
+                                      if (picked != null) {
+                                        setState(() => deadline = picked);
+                                      }
+                                    },
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: isGroupGoal,
-                              onChanged: (val) =>
-                                  setState(() => isGroupGoal = val!),
-                            ),
-                            Text('Is Group Goal'),
-                          ],
-                        ),
+                        if (isLoading) ...[
+                          SizedBox(height: 16),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: themeProvider.isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Updating goal...',
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed:
+                          isLoading ? null : () => Navigator.pop(context),
                       child: Text(
                         'Cancel',
                         style: TextStyle(
@@ -628,51 +736,69 @@ class _GoalState extends State<GoalWidget> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (nameController.text.trim().isNotEmpty) {
-                          widget.treeNode.name = nameController.text.trim();
-                          widget.treeNode.description = '';
-                          widget.treeNode.priority = priority;
-                          widget.treeNode.status = status;
-                          widget.treeNode.deadline = deadline;
-                          widget.treeNode.isGroupGoal = isGroupGoal;
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (nameController.text.trim().isNotEmpty) {
+                                setState(() => isLoading = true);
+                                widget.treeNode.name =
+                                    nameController.text.trim();
+                                widget.treeNode.description = '';
+                                widget.treeNode.priority = priority;
+                                widget.treeNode.status = status;
+                                widget.treeNode.deadline = deadline;
+                                widget.treeNode.isGroupGoal = isGroupGoal;
 
-                          try {
-                            await updateGoalFromNode(
-                              userId: widget.userId,
-                              goalId: widget.treeNode.id!,
-                              node: widget.treeNode,
-                            );
-                            setState(() {});
-
-                            ;
-                            if (widget.onGoalUpdated != null) {
-                              widget.onGoalUpdated!();
-                            }
-
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Goal updated!'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to update goal: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
+                                try {
+                                  await updateGoalFromNode(
+                                    userId: widget.userId,
+                                    goalId: widget.treeNode.id!,
+                                    node: widget.treeNode,
+                                  );
+                                  setState(() {});
+                                  if (widget.onGoalUpdated != null) {
+                                    widget.onGoalUpdated!();
+                                  }
+                                  Navigator.pop(context);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Goal updated!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('Failed to update goal: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => isLoading = false);
+                                  }
+                                }
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                       ),
-                      child: Text('Update'),
+                      child: isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('Update'),
                     ),
                   ],
                 );
