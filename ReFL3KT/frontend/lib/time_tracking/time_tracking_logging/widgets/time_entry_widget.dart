@@ -78,8 +78,8 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
               widget.timeEntry.endTime = DateTime(1970, 1, 1, 5, 30);
 
               // Call the delete API
-              bool deleteSuccess = await deleteTimeEntry(
-                  widget.timeEntry, Provider.of<UserProvider>(context).userId!);
+              bool deleteSuccess = await deleteTimeEntry(widget.timeEntry,
+                  Provider.of<UserProvider>(context, listen: false).userId!);
 
               if (deleteSuccess) {
                 // Show success message

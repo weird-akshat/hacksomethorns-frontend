@@ -29,7 +29,7 @@ void initConfig() {
     siblingSeparation = 40;
     subtreeSeparation = 180;
     levelSeparation = 180;
-    GOAL_WIDGET_HEIGHT = 40;
+    GOAL_WIDGET_HEIGHT = 80;
     GOAL_WIDGET_WIDTH = 140;
     edgeStrokeWidth = 1.25;
   } else {

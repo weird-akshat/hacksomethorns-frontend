@@ -154,8 +154,11 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
                             timeLogProvider.addTimeEntry(now, timeEntry);
                             timeLogProvider.sort();
 
-                            await updateTimeEntry(timeEntry,
-                                Provider.of<UserProvider>(context).userId!);
+                            await updateTimeEntry(
+                                timeEntry,
+                                Provider.of<UserProvider>(context,
+                                        listen: false)
+                                    .userId!);
                             currentProvider.clearEntry();
                           } catch (e) {
                             // Handle error if needed

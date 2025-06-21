@@ -8,7 +8,7 @@ Future<bool> deleteTimeEntry(TimeEntry entry, String userId) async {
   try {
     final response = await http.delete(
       Uri.parse(
-          "${apiUrl}api/users/${userId}/time-entries/${entry.timeEntryId}/"),
+          "${apiUrl}api/users/$userId/time-entries/${entry.timeEntryId}/"),
     );
 
     if (response.statusCode == 204) {
