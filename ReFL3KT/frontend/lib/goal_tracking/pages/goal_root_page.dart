@@ -19,12 +19,7 @@ class _GoalTrackingOuterScreenState extends State<GoalRootPage> {
   bool _isLoading = true; // Track loading state
   String? _error; // Track errors
   final bool darkMode = true;
-  List<TreeNode> list = [
-    TreeNode(name: "goal 1"),
-    TreeNode(
-      name: "goal2",
-    ),
-    TreeNode(name: "name")
+  List<TreeNode> list =[
   ];
   // final bool darkMode = true;
   final TextEditingController _goalController = TextEditingController();
@@ -196,7 +191,7 @@ class _GoalTrackingOuterScreenState extends State<GoalRootPage> {
               onPressed: () {
                 if (_goalController.text.trim().isNotEmpty) {
                   setState(() {
-                    list.add(TreeNode(name: _goalController.text.trim()));
+                    // list.add(TreeNode(name: _goalController.text.trim()));
                   });
                   Navigator.of(context).pop();
                 }
@@ -522,8 +517,8 @@ class _GoalState extends State<RootGoalWidget> {
   }
 
   void _createChildGoal(String name) {
-    final childNode = TreeNode(name: name);
-    widget.treeNode.addChild(childNode);
+    // final childNode = TreeNode(name: name);
+    // widget.treeNode.addChild(childNode);
 
     if (widget.onChildAdded != null) {
       widget.onChildAdded!();

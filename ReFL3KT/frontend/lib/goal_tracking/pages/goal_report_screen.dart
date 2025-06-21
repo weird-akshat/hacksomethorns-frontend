@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/goal_tracking/entities/task.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
-import 'package:frontend/goal_tracking/widgets/graphview.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:provider/provider.dart';
@@ -24,39 +24,21 @@ class GoalReportScreen extends StatefulWidget {
 class _GoalReportScreenState extends State<GoalReportScreen> {
   List<Task> tasks = [
     Task(
-        id: '1',
-        name: 'Morning Workout',
-        category: 'Health',
-        isRecurring: true,
-        timeSpent: 8.5),
-    Task(
-        id: '2',
-        name: 'Flutter Development',
-        category: 'Work',
-        isRecurring: false,
-        timeSpent: 25.0),
-    Task(
-        id: '3',
-        name: 'Reading Books',
-        category: 'Learning',
-        isRecurring: true,
-        timeSpent: 12.3),
-    Task(
         id: '4',
         name: 'Meditation',
-        category: 'Health',
+        category: 5,
         isRecurring: true,
         timeSpent: 6.7),
     Task(
         id: '5',
         name: 'Project Planning',
-        category: 'Work',
+        category: 5,
         isRecurring: false,
         timeSpent: 15.2),
     Task(
         id: '6',
         name: 'Grocery Shopping',
-        category: 'Personal',
+        category: 5,
         isRecurring: false,
         timeSpent: 2.5,
         isComplete: true),
@@ -94,9 +76,9 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
 
   void _showTaskDialog({Task? task}) {
     final nameController = TextEditingController(text: task?.name ?? '');
-    final categoryController =
-        TextEditingController(text: task?.category ?? '');
     bool isRecurring = task?.isRecurring ?? false;
+    // Support both int and String category, adapt as needed
+    Category? selectedCategory;
 
     showDialog(
       context: context,
@@ -130,7 +112,14 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                           themeProvider: themeProvider,
                         ),
                         SizedBox(height: 16),
-                        CategoryPicker(onCategorySelected: (cat) {}),
+                        CategoryPicker(
+                          initialCategoryName: selectedCategory?.name,
+                          onCategorySelected: (cat) {
+                            setState(() {
+                              selectedCategory = cat;
+                            });
+                          },
+                        ),
                         SizedBox(height: 16),
                         Row(
                           children: [
@@ -167,13 +156,20 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                     ElevatedButton(
                       onPressed: () {
                         if (nameController.text.isNotEmpty &&
-                            categoryController.text.isNotEmpty) {
+                            selectedCategory != null) {
                           if (task == null) {
-                            _addTask(nameController.text,
-                                categoryController.text, isRecurring);
+                            _addTask(
+                              nameController.text,
+                              selectedCategory,
+                              isRecurring,
+                            );
                           } else {
-                            _updateTask(task, nameController.text,
-                                categoryController.text, isRecurring);
+                            _updateTask(
+                              task,
+                              nameController.text,
+                              selectedCategory,
+                              isRecurring,
+                            );
                           }
                           Navigator.of(context).pop();
                         }
@@ -222,7 +218,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     );
   }
 
-  void _addTask(String name, String category, bool isRecurring) {
+  void _addTask(String name, dynamic category, bool isRecurring) {
     setState(() {
       tasks.add(Task(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -234,7 +230,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     });
   }
 
-  void _updateTask(Task task, String name, String category, bool isRecurring) {
+  void _updateTask(Task task, String name, dynamic category, bool isRecurring) {
     setState(() {
       final index = tasks.indexWhere((t) => t.id == task.id);
       if (index != -1) {
@@ -333,7 +329,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 // Task List Section
                 _buildTaskListSection(themeProvider),
                 SizedBox(height: 24),
-
                 // Charts Section
                 _buildChartsSection(themeProvider),
               ],
@@ -468,8 +463,9 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 : TextDecoration.none,
           ),
         ),
+        // Only show time spent and completed status, not category
         subtitle: Text(
-          '${task.category} • ${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
+          '${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
           style: TextStyle(
             color: isCompletedNonRecurring
                 ? themeProvider.subtleAccent.withOpacity(0.6)
@@ -610,7 +606,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         ),
 
         SizedBox(height: 24),
-
         // Bar Chart
         Container(
           decoration: BoxDecoration(

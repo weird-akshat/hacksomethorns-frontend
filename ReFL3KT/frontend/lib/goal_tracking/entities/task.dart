@@ -2,7 +2,7 @@
 class Task {
   String id;
   String name;
-  String category;
+  int category;
   bool isRecurring;
   bool isComplete;
   double timeSpent; // in hours
@@ -19,7 +19,7 @@ class Task {
   Task copyWith({
     String? id,
     String? name,
-    String? category,
+    int? category,
     bool? isRecurring,
     bool? isComplete,
     double? timeSpent,
@@ -31,6 +31,17 @@ class Task {
       isRecurring: isRecurring ?? this.isRecurring,
       isComplete: isComplete ?? this.isComplete,
       timeSpent: timeSpent ?? this.timeSpent,
+    );
+  }
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['id'].toString(),
+      name: json['title'],
+      category: json['category'],
+      isRecurring: json['is_recurring'],
+      isComplete: json['is_complete'] ?? false,
+      timeSpent: (json['estimated_time'] ?? 0) / 60.0,
     );
   }
 }
