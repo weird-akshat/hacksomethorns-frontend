@@ -4,6 +4,7 @@ import 'package:frontend/api_methods/post_time_entry.dart';
 import 'package:frontend/api_methods/update_time_entry.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
@@ -150,8 +151,11 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
 
                           try {
                             // Make API call to persist changes
-                            final success =
-                                await updateTimeEntry(widget.timeEntry);
+                            final success = await updateTimeEntry(
+                                widget.timeEntry,
+                                Provider.of<UserProvider>(context,
+                                        listen: false)
+                                    .userId!);
 
                             if (success) {
                               // Check if the date changed (entry moved to different day)
@@ -321,6 +325,13 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                               borderRadius: BorderRadius.circular(10))),
                           backgroundColor: WidgetStatePropertyAll(cardColor),
                         ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                newStartTime =
+                                    await pickDateTime(newStartTime, context);
+                                setState(() {});
+                              },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: SizedBox(
@@ -368,13 +379,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                newStartTime =
-                                    await pickDateTime(newStartTime, context);
-                                setState(() {});
-                              },
                       ),
                     ),
                     Padding(
@@ -385,6 +389,13 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                               borderRadius: BorderRadius.circular(10))),
                           backgroundColor: WidgetStatePropertyAll(cardColor),
                         ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                newEndTime =
+                                    await pickDateTime(newEndTime, context);
+                                setState(() {});
+                              },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: SizedBox(
@@ -429,13 +440,6 @@ class _TimeEntrySheetState extends State<UpdateTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                newEndTime =
-                                    await pickDateTime(newEndTime, context);
-                                setState(() {});
-                              },
                       ),
                     ),
                     Padding(
