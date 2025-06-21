@@ -7,7 +7,7 @@ class AuthApiService {
   final String? baseURL = dotenv.env['auth_url'];
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
-  Future<String?> registerUser(
+  Future<Map<String, dynamic>?> registerUser(
     String emailid,
     String password,
     String first_name,
@@ -31,10 +31,24 @@ class AuthApiService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        final token = responseData['token'];
-        await storage.write(key: 'jwt_token', value: token);
-        return token;
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final responseData = jsonDecode(response.body);
+          final token = responseData['token'];
+          // CORRECTED: Access user object
+          final user = responseData['user'];
+          final userId = user['id']?.toString() ?? '';
+          final username = user['username'] ?? emailid;
+
+          await storage.write(key: 'jwt_token', value: token);
+          await storage.write(key: 'user_id', value: userId);
+          await storage.write(key: 'username', value: username);
+
+          return {
+            'token': token,
+            'userId': userId,
+            'username': username,
+          };
+        }
       } else {
         print('Registration failed [${response.statusCode}]: ${response.body}');
         return null;
@@ -50,7 +64,7 @@ class AuthApiService {
     return token != null;
   }
 
-  Future<String?> signIn(String emailID, String password) async {
+  Future<Map<String, dynamic>?> signIn(String emailID, String password) async {
     final url = Uri.parse('$baseURL/api/auth/login/');
 
     try {
@@ -62,11 +76,26 @@ class AuthApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print(data); // Keep for debugging
+
         final token = data['token'];
+        // CORRECTED: Access user object
+        final user = data['user'];
+        final userId = user['id']?.toString() ?? '';
+        final username = user['username'] ?? emailID;
+
         await storage.write(key: 'jwt_token', value: token);
-        return token;
+        await storage.write(key: 'user_id', value: userId);
+        await storage.write(key: 'username', value: username);
+
+        print(userId); // Verify extraction
+        return {
+          'token': token,
+          'userId': userId,
+          'username': username,
+        };
       } else {
-        print('Sign In failed, ${response.statusCode}  and ${response.body}');
+        print('Sign In failed, ${response.statusCode} and ${response.body}');
         return null;
       }
     } catch (e) {
@@ -77,5 +106,18 @@ class AuthApiService {
 
   Future<void> signOut() async {
     await storage.delete(key: 'jwt_token');
+    await storage.delete(key: 'user_id');
+    await storage.delete(key: 'username');
+  }
+
+  Future<Map<String, String?>> getUserFromStorage() async {
+    final token = await storage.read(key: 'jwt_token');
+    final userId = await storage.read(key: 'user_id');
+    final username = await storage.read(key: 'username');
+    return {
+      'token': token,
+      'userId': userId,
+      'username': username,
+    };
   }
 }

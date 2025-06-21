@@ -71,6 +71,8 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    print("userd id");
+    print(Provider.of<UserProvider>(context).userId);
 
     return Scaffold(
       appBar: AppBar(

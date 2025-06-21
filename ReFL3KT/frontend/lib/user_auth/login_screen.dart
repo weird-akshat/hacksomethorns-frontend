@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/home.dart';
 import 'package:provider/provider.dart';
-// import 'goal_tracking_outer_screen.dart';
-import 'api_service_auth.dart'; // Import the API service
+import 'api_service_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,10 +19,17 @@ class _LoginScreenState extends State<LoginScreen> {
     debugPrint("Attempting login for username: ${data.name}");
 
     try {
-      final token = await _authService.signIn(data.name, data.password);
+      final result = await _authService.signIn(data.name, data.password);
 
-      if (token != null) {
-        debugPrint("Login successful");
+      if (result != null) {
+        // Store in provider
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        userProvider.setUser(
+          userId: result['userId'] ?? '',
+          username: result['username'] ?? data.name,
+          token: result['token'],
+        );
+        debugPrint("Login successful. User ID: ${userProvider.userId}");
         return null; // success
       } else {
         return "Invalid username or password";
@@ -43,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final additionalData = data.additionalSignupData;
       final fullName = additionalData?['Name'] ?? '';
       final username = additionalData?['Username'] ?? data.name;
+      final phoneNumber = additionalData?['Phone'] ?? '';
 
       // Split full name into first and last name
       final nameParts = fullName.split(' ');
@@ -50,16 +56,22 @@ class _LoginScreenState extends State<LoginScreen> {
       final lastName =
           nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      final token = await _authService.registerUser(
+      final result = await _authService.registerUser(
         data.name!, // email/username
         data.password!,
         firstName,
         lastName,
-        '', // phone_number - you might want to add this as an additional field
+        phoneNumber,
       );
 
-      if (token != null) {
-        debugPrint("Registration successful");
+      if (result != null) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        userProvider.setUser(
+          userId: result['userId'] ?? '',
+          username: result['username'] ?? data.name,
+          token: result['token'],
+        );
+        debugPrint("Registration successful. User ID: ${userProvider.userId}");
         return null; // success
       } else {
         return "Registration failed. Please try again.";
@@ -72,11 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<String?> _recoverPassword(String name) async {
     debugPrint('Recovering password for: $name');
-
-    // Since the API service doesn't have a password recovery method,
-    // you'll need to implement this on your backend and add it to the API service
     return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
-      // For now, just simulate the recovery process
       return "Password recovery is not yet implemented";
     });
   }
@@ -84,14 +92,20 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // print(Provider.of<UserProvider>(context).userId);
     _checkLoginStatus();
   }
 
   void _checkLoginStatus() async {
-    // Check if user is already logged in
     final isLoggedIn = await _authService.isLoggedIn();
     if (isLoggedIn && mounted) {
+      // Restore user info from storage and update provider
+      final userData = await _authService.getUserFromStorage();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.setUser(
+        userId: userData['userId'] ?? '',
+        username: userData['username'] ?? '',
+        token: userData['token'] ?? '',
+      );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const Home(),
@@ -105,7 +119,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Theme(
         data: Theme.of(context).copyWith(
-          // Override the overall theme to ensure white text
           textTheme: Theme.of(context).textTheme.apply(
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
@@ -168,38 +181,27 @@ class _LoginScreenState extends State<LoginScreen> {
             recoverPasswordSuccess: 'Recovery email sent successfully!',
           ),
           theme: LoginTheme(
-            // Primary colors - Pure black theme
             primaryColor: const Color(0xFF000000),
             accentColor: const Color(0xFF1A1A1A),
             errorColor: const Color(0xFFFF4444),
-
-            // Title styling
             titleStyle: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
               fontSize: 42,
               letterSpacing: 6.0,
             ),
-
-            // Body style
             bodyStyle: const TextStyle(color: Colors.white70, fontSize: 16),
-
-            // Text field styling - FORCE WHITE COLOR
             textFieldStyle: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.normal,
             ),
-
-            // Button styling
             buttonStyle: const TextStyle(
               fontWeight: FontWeight.w500,
               color: Colors.black,
               fontSize: 16,
               letterSpacing: 1.0,
             ),
-
-            // Card theme - Black with subtle borders
             cardTheme: CardTheme(
               color: const Color(0xFF000000),
               elevation: 0,
@@ -209,8 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               margin: const EdgeInsets.only(top: 15),
             ),
-
-            // Input decoration
             inputTheme: InputDecorationTheme(
               filled: true,
               fillColor: const Color(0xFF111111),
@@ -259,8 +259,6 @@ class _LoginScreenState extends State<LoginScreen> {
               prefixStyle: const TextStyle(color: Colors.white),
               suffixStyle: const TextStyle(color: Colors.white),
             ),
-
-            // Button theme - Minimalist black design
             buttonTheme: LoginButtonTheme(
               splashColor: Colors.white.withOpacity(0.1),
               backgroundColor: Colors.white,
@@ -271,12 +269,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-
-            // Page color scheme - Pure black
             pageColorLight: const Color(0xFF000000),
             pageColorDark: const Color(0xFF000000),
-
-            // Before/After animation colors
             beforeHeroFontSize: 50,
             afterHeroFontSize: 20,
           ),
@@ -284,7 +278,6 @@ class _LoginScreenState extends State<LoginScreen> {
             if (value!.isEmpty) {
               return 'Please enter your email or username';
             }
-            // Basic email validation
             if (value.contains('@') &&
                 !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
               return 'Please enter a valid email address';
@@ -329,11 +322,9 @@ class _LoginScreenState extends State<LoginScreen> {
               keyName: 'Phone',
               displayName: 'Phone Number (Optional)',
               fieldValidator: (value) {
-                // Phone is optional, so return null if empty
                 if (value == null || value.isEmpty) {
                   return null;
                 }
-                // Basic phone validation if provided
                 if (value.length < 10) {
                   return 'Please enter a valid phone number';
                 }
