@@ -520,7 +520,7 @@ class _GoalState extends State<GoalWidget> {
     );
   }
 
-  void _showChangeParentDialog() {
+  void showChangeParentDialog() {
     TreeNode? selectedParent = widget.treeNode.parent;
     showDialog(
       context: context,

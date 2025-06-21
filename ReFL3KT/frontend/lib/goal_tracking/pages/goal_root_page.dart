@@ -6,6 +6,7 @@ import 'package:frontend/api_methods/delete_user_goal.dart';
 import 'package:frontend/api_methods/post_goal_from_treenode.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
+import 'package:frontend/goal_tracking/pages/tree_screen.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -417,7 +418,7 @@ class _GoalRootPageState extends State<GoalRootPage> {
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black, size: 28),
             onPressed: () {
-              _showCreateRootGoalDialog(context, "1");
+              _showCreateRootGoalDialog(context, "1", onGoalAdded: _fetchGoals);
             },
           ),
         ],
@@ -438,15 +439,22 @@ class _GoalRootPageState extends State<GoalRootPage> {
                           const SizedBox(height: 20),
                       itemBuilder: (context, index) {
                         final goal = list[index];
-                        return RootGoalWidget(
-                          treeNode: goal,
-                          offset: Offset(
-                            MediaQuery.of(context).size.width / 2,
-                            MediaQuery.of(context).size.height *
-                                (index + 1) /
-                                (list.length + 1),
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (builder) =>
+                                    TreeScreen(node: list[index])));
+                          },
+                          child: RootGoalWidget(
+                            treeNode: goal,
+                            offset: Offset(
+                              MediaQuery.of(context).size.width / 2,
+                              MediaQuery.of(context).size.height *
+                                  (index + 1) /
+                                  (list.length + 1),
+                            ),
+                            onGoalDeleted: () => _deleteGoal(goal),
                           ),
-                          onGoalDeleted: () => _deleteGoal(goal),
                         );
                       },
                     ),
