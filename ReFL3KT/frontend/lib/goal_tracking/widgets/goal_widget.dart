@@ -380,13 +380,16 @@ class _GoalState extends State<GoalWidget> {
                             ..parentId = widget.treeNode.id;
 
                           try {
-                            await postGoalFromTreeNode(
+                            final TreeNode returnedGoal =
+                                await postGoalFromTreeNode(
                               childNode,
                               widget.userId,
                             );
                             widget.treeNode.addChild(childNode);
                             if (widget.onChildAdded != null) {
                               widget.onChildAdded!();
+                              childNode.id = returnedGoal.id;
+                              childNode.name = returnedGoal.name;
                             }
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -643,6 +646,9 @@ class _GoalState extends State<GoalWidget> {
                               goalId: widget.treeNode.id!,
                               node: widget.treeNode,
                             );
+                            setState(() {});
+
+                            ;
                             if (widget.onGoalUpdated != null) {
                               widget.onGoalUpdated!();
                             }

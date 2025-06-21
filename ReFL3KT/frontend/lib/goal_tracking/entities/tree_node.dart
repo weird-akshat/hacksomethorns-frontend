@@ -47,4 +47,17 @@ class TreeNode {
       'deadline': deadline,
     };
   }
+
+  factory TreeNode.fromJson(Map<String, dynamic> json) {
+    return TreeNode(
+      name: json['name'],
+      id: json['id'],
+    )
+      ..description = json['description']
+      ..parentId = json['parent']
+      ..status = json['status'] == 'not_started' ? 'active' : 'completed'
+      ..priority = json['priority']
+      ..deadline = json['deadline']
+      ..isGroupGoal = json['is_group_goal'] ?? false;
+  }
 }
