@@ -16,7 +16,7 @@ class CategoryProvider with ChangeNotifier {
   }
 
   Future<bool> addCategory(Category category, String userId) async {
-    bool success = await postCategory(category);
+    bool success = await postCategory(category, userId);
     if (success) {
       // Reload categories to get the updated list from server
       await loadCategories(userId);

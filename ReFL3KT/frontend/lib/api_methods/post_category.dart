@@ -4,10 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:frontend/time_tracking/entities/category.dart';
 
-Future<bool> postCategory(Category category) async {
+Future<bool> postCategory(Category category, String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse("${apiUrl}api/users/${category.userId}/categories/");
-
+  final uri = Uri.parse("${apiUrl}api/users/$userId/categories/");
+  print(uri);
   final Map<String, dynamic> requestBody = {
     "name": category.name,
     "color": 0,

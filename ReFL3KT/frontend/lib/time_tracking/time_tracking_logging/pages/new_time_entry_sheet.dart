@@ -3,6 +3,7 @@ import 'package:frontend/api_methods/post_time_entry.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/Methods/pick_date_time.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
@@ -133,7 +134,9 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
 
                           // Create new time entry from current widget state
                           final newTimeEntry = TimeEntry(
-                            userId: "0",
+                            userId: Provider.of<UserProvider>(context,
+                                    listen: false)
+                                .userId!,
                             timeEntryId: "0", // Will be set by the server
                             description:
                                 descriptionController.text.trim().isEmpty
@@ -148,8 +151,11 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
 
                           try {
                             // Make API call to create new time entry
-                            final createdEntry =
-                                await postTimeEntry(newTimeEntry);
+                            final createdEntry = await postTimeEntry(
+                                newTimeEntry,
+                                Provider.of<UserProvider>(context,
+                                        listen: false)
+                                    .userId!);
                             createdEntry?.startTime =
                                 createdEntry.startTime.toLocal();
 
@@ -326,6 +332,22 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                               borderRadius: BorderRadius.circular(10))),
                           backgroundColor: WidgetStatePropertyAll(cardColor),
                         ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                final newStartTime =
+                                    await pickDateTime(startTime, context);
+                                // final newStartTime = newwStartTime.toLocal();
+                                setState(() {
+                                  startTime = newStartTime;
+                                  // If not a current time entry and end time is before start time, adjust it
+                                  if (!isCurrentTimeEntry &&
+                                      endTime != null &&
+                                      endTime!.isBefore(startTime)) {
+                                    endTime = startTime.add(Duration(hours: 1));
+                                  }
+                                });
+                              },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: SizedBox(
@@ -370,22 +392,6 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                             ),
                           ),
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                final newStartTime =
-                                    await pickDateTime(startTime, context);
-                                // final newStartTime = newwStartTime.toLocal();
-                                setState(() {
-                                  startTime = newStartTime;
-                                  // If not a current time entry and end time is before start time, adjust it
-                                  if (!isCurrentTimeEntry &&
-                                      endTime != null &&
-                                      endTime!.isBefore(startTime)) {
-                                    endTime = startTime.add(Duration(hours: 1));
-                                  }
-                                });
-                              },
                       ),
                     ),
                     if (!isCurrentTimeEntry)
@@ -398,6 +404,17 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                                     borderRadius: BorderRadius.circular(10))),
                             backgroundColor: WidgetStatePropertyAll(cardColor),
                           ),
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (endTime != null) {
+                                    final newEndTime =
+                                        await pickDateTime(endTime!, context);
+                                    setState(() {
+                                      endTime = newEndTime;
+                                    });
+                                  }
+                                },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: SizedBox(
@@ -447,17 +464,6 @@ class _NewTimeEntrySheetState extends State<NewTimeEntrySheet> {
                               ),
                             ),
                           ),
-                          onPressed: isLoading
-                              ? null
-                              : () async {
-                                  if (endTime != null) {
-                                    final newEndTime =
-                                        await pickDateTime(endTime!, context);
-                                    setState(() {
-                                      endTime = newEndTime;
-                                    });
-                                  }
-                                },
                         ),
                       ),
                     Padding(

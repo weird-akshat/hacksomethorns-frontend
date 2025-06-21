@@ -57,8 +57,10 @@ class _CategoryPickerState extends State<CategoryPicker> {
       context: context,
       barrierDismissible: false, // Prevent dismissing during loading
       builder: (BuildContext context) {
-        return const AddCategoryDialog(
-          userId: '1', // Replace with actual userId
+        return AddCategoryDialog(
+          userId: Provider.of<UserProvider>(
+            context,
+          ).userId!, // Replace with actual userId
         );
       },
     );
@@ -185,7 +187,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
     });
 
     final category = Category(
-      '1', // userId
+      Provider.of<UserProvider>(context, listen: false).userId!, // userId
       0,
       _nameController.text.trim(),
       Colors.black, // Default or placeholder color
@@ -194,7 +196,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     final success = await categoryProvider.addCategory(
-        category, Provider.of<UserProvider>(context).userId!);
+        category, Provider.of<UserProvider>(context, listen: false).userId!);
 
     setState(() {
       _isLoading = false;

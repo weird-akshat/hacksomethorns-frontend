@@ -261,7 +261,7 @@ class _GoalState extends State<GoalWidget> {
   Future<void> _deleteGoal() async {
     try {
       await deleteUserGoal(
-        userId: Provider.of<UserProvider>(context).userId!,
+        userId: Provider.of<UserProvider>(context, listen: false).userId!,
         goalId: widget.treeNode.id!,
       );
 
@@ -454,7 +454,9 @@ class _GoalState extends State<GoalWidget> {
                                   final TreeNode returnedGoal =
                                       await postGoalFromTreeNode(
                                     childNode,
-                                    widget.userId,
+                                    Provider.of<UserProvider>(context,
+                                            listen: false)
+                                        .userId!,
                                   );
                                   widget.treeNode.addChild(childNode);
                                   if (widget.onChildAdded != null) {
@@ -760,7 +762,8 @@ class _GoalState extends State<GoalWidget> {
 
                                 try {
                                   await updateGoalFromNode(
-                                    userId: Provider.of<UserProvider>(context)
+                                    userId: Provider.of<UserProvider>(context,
+                                            listen: false)
                                         .userId!,
                                     goalId: widget.treeNode.id!,
                                     node: widget.treeNode,

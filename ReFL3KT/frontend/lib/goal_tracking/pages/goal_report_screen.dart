@@ -22,7 +22,6 @@ class ChartData {
 
 class GoalReportScreen extends StatefulWidget {
   final TreeNode goal;
-  // final String userId;
   const GoalReportScreen({super.key, required this.goal});
 
   @override
@@ -50,15 +49,18 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     });
     try {
       final fetchedTasks = await fetchTasksForGoal(
-          Provider.of<UserProvider>(context).userId!, widget.goal.id);
+          Provider.of<UserProvider>(context, listen: false).userId!,
+          widget.goal.id);
       final fetchedAnalytics = await fetchGoalAnalytics(
-          Provider.of<UserProvider>(context).userId!, widget.goal.id);
+          Provider.of<UserProvider>(context, listen: false).userId!,
+          widget.goal.id);
       setState(() {
         tasks = fetchedTasks;
         analytics = fetchedAnalytics;
         isLoading = false;
       });
     } catch (e) {
+      print('Error loading data: $e');
       setState(() {
         isLoading = false;
         isError = true;
@@ -67,13 +69,28 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   Future<void> _addTask(Task task) async {
+    print("_addTask called with task: ${task.name}");
     setState(() => isLoading = true);
     try {
-      await createTask(
-          Provider.of<UserProvider>(context).userId!, widget.goal.id, task);
+      print("Calling createTask API...");
+      final userId = Provider.of<UserProvider>(context, listen: false).userId!;
+      print("User ID: $userId, Goal ID: ${widget.goal.id}");
+
+      await createTask(userId, widget.goal.id, task);
+      print("createTask API call successful");
       await _loadData();
-    } catch (_) {
+    } catch (e) {
+      print("Error in _addTask: $e");
       setState(() => isLoading = false);
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add task: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -81,12 +98,21 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     setState(() => isLoading = true);
     try {
       await updateTask(
-          userId: Provider.of<UserProvider>(context).userId!,
+          userId: Provider.of<UserProvider>(context, listen: false).userId!,
           goalId: widget.goal.id,
           task: task);
       await _loadData();
-    } catch (_) {
+    } catch (e) {
+      print("Error updating task: $e");
       setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update task: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -94,12 +120,21 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     setState(() => isLoading = true);
     try {
       await deleteTask(
-          userId: Provider.of<UserProvider>(context).userId!,
+          userId: Provider.of<UserProvider>(context, listen: false).userId!,
           goalId: widget.goal.id,
           taskId: task.id);
       await _loadData();
-    } catch (_) {
+    } catch (e) {
+      print("Error deleting task: $e");
       setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete task: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -113,6 +148,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   void _showAddTaskDialog() {
+    print("_showAddTaskDialog called");
     _showTaskDialog();
   }
 
@@ -121,9 +157,16 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   void _showTaskDialog({Task? task}) {
+    print("_showTaskDialog called, editing: ${task != null}");
     final nameController = TextEditingController(text: task?.name ?? '');
     bool isRecurring = task?.isRecurring ?? false;
     Category? selectedCategory;
+
+    // Initialize with existing category if editing
+    if (task != null) {
+      // You might need to fetch the category details here if needed
+      // selectedCategory = ...;
+    }
 
     showDialog(
       context: context,
@@ -131,7 +174,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return StatefulBuilder(
-              builder: (context, setState) {
+              builder: (context, setDialogState) {
                 return AlertDialog(
                   backgroundColor: themeProvider.cardColor,
                   shape: RoundedRectangleBorder(
@@ -160,7 +203,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                         CategoryPicker(
                           initialCategoryName: selectedCategory?.name,
                           onCategorySelected: (cat) {
-                            setState(() {
+                            print("Category selected: ${cat?.name}");
+                            setDialogState(() {
                               selectedCategory = cat;
                             });
                           },
@@ -179,7 +223,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                             Switch(
                               value: isRecurring,
                               onChanged: (value) {
-                                setState(() {
+                                setDialogState(() {
                                   isRecurring = value;
                                 });
                               },
@@ -192,7 +236,10 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        print("Dialog cancelled");
+                        Navigator.of(context).pop();
+                      },
                       child: Text(
                         'Cancel',
                         style: TextStyle(color: themeProvider.subtleAccent),
@@ -200,25 +247,53 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        if (nameController.text.isNotEmpty &&
-                            selectedCategory != null) {
-                          final newTask = Task(
-                            id: task?.id ??
-                                DateTime.now()
-                                    .millisecondsSinceEpoch
-                                    .toString(),
-                            name: nameController.text,
-                            category: selectedCategory!.categoryId,
-                            isRecurring: isRecurring,
-                            isComplete: task?.isComplete ?? false,
-                            timeSpent: task?.timeSpent ?? 0.0,
+                        print("Add/Update button pressed");
+                        print("Task name: '${nameController.text}'");
+                        print("Selected category: ${selectedCategory?.name}");
+                        print("Is recurring: $isRecurring");
+
+                        if (nameController.text.trim().isEmpty) {
+                          print("Task name is empty");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Please enter a task name'),
+                              backgroundColor: Colors.orange,
+                            ),
                           );
-                          if (task == null) {
-                            _addTask(newTask);
-                          } else {
-                            _updateTask(newTask);
-                          }
-                          Navigator.of(context).pop();
+                          return;
+                        }
+
+                        if (selectedCategory == null) {
+                          print("No category selected");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Please select a category'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+
+                        final newTask = Task(
+                          id: task?.id ??
+                              DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: nameController.text.trim(),
+                          category: selectedCategory!.categoryId,
+                          isRecurring: isRecurring,
+                          isComplete: task?.isComplete ?? false,
+                          timeSpent: task?.timeSpent ?? 0.0,
+                        );
+
+                        print("Created task object: ${newTask.name}");
+
+                        Navigator.of(context).pop();
+
+                        if (task == null) {
+                          print("Calling _addTask");
+                          _addTask(newTask);
+                        } else {
+                          print("Calling _updateTask");
+                          _updateTask(newTask);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -319,7 +394,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     );
   }
 
-  // FIX: Use immediate_children for chart data
   List<ChartData> get chartData {
     final children = analytics?['immediate_children'];
     if (children == null) return [];
@@ -333,12 +407,56 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         if (isLoading) {
-          return Center(child: CircularProgressIndicator());
+          return Scaffold(
+            backgroundColor: themeProvider.scaffoldColor,
+            appBar: AppBar(
+              title: Text(
+                'Goal Report: ${widget.goal.name}',
+                style: TextStyle(
+                  color: themeProvider.textColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: themeProvider.cardColor,
+              elevation: 0,
+              iconTheme: IconThemeData(color: themeProvider.textColor),
+            ),
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
+
         if (isError) {
-          return Center(
-              child: Text('Failed to load data',
-                  style: TextStyle(color: themeProvider.textColor)));
+          return Scaffold(
+            backgroundColor: themeProvider.scaffoldColor,
+            appBar: AppBar(
+              title: Text(
+                'Goal Report: ${widget.goal.name}',
+                style: TextStyle(
+                  color: themeProvider.textColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: themeProvider.cardColor,
+              elevation: 0,
+              iconTheme: IconThemeData(color: themeProvider.textColor),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Failed to load data',
+                    style: TextStyle(color: themeProvider.textColor),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadData,
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         return Scaffold(
@@ -397,7 +515,10 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 ),
                 Spacer(),
                 FloatingActionButton.small(
-                  onPressed: _showAddTaskDialog,
+                  onPressed: () {
+                    print("Add task button pressed");
+                    _showAddTaskDialog();
+                  },
                   backgroundColor: themeProvider.primaryAccent,
                   child: Icon(Icons.add, color: Colors.white),
                 ),
@@ -406,14 +527,24 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
           ),
           Container(
             height: 300,
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                return _buildTaskCard(task, themeProvider);
-              },
-            ),
+            child: tasks.isEmpty
+                ? Center(
+                    child: Text(
+                      'No tasks yet. Add one to get started!',
+                      style: TextStyle(
+                        color: themeProvider.subtleAccent,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: tasks.length,
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      return _buildTaskCard(task, themeProvider);
+                    },
+                  ),
           ),
           SizedBox(height: 16),
         ],
@@ -497,15 +628,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 : TextDecoration.none,
           ),
         ),
-        // REMOVED: subtitle showing time spent
-        // subtitle: Text(
-        //   '${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
-        //   style: TextStyle(
-        //     color: isCompletedNonRecurring
-        //         ? themeProvider.subtleAccent.withOpacity(0.6)
-        //         : themeProvider.subtleAccent,
-        //   ),
-        // ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -554,7 +676,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
 
   Widget _buildChartsSection(ThemeProvider themeProvider) {
     if (analytics == null) {
-      return SizedBox(); // Or a placeholder
+      return SizedBox();
     }
 
     return Column(

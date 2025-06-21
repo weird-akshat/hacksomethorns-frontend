@@ -3,9 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:http/http.dart' as http;
 
-Future<TimeEntry?> postTimeEntry(TimeEntry entry) async {
+Future<TimeEntry?> postTimeEntry(TimeEntry entry, String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final int userId = 1;
+  // final int userId = 1;
 
   final Map<String, dynamic> requestBody = {
     "description": entry.description,

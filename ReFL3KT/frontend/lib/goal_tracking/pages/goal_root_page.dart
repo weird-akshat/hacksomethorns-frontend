@@ -176,7 +176,9 @@ class _GoalRootPageState extends State<GoalRootPage> {
                                   final TreeNode returnedGoal =
                                       await postGoalFromTreeNode(
                                     rootGoal,
-                                    Provider.of<UserProvider>(context).userId!,
+                                    Provider.of<UserProvider>(context,
+                                            listen: false)
+                                        .userId!,
                                   );
                                   if (onGoalAdded != null) {
                                     onGoalAdded();
@@ -297,7 +299,7 @@ class _GoalRootPageState extends State<GoalRootPage> {
     setState(() => _isLoading = true);
     try {
       await deleteUserGoal(
-          userId: Provider.of<UserProvider>(context).userId!,
+          userId: Provider.of<UserProvider>(context, listen: false).userId!,
           goalId: node.id!); // Replace with actual user ID
       setState(() {
         list.removeWhere((g) => g.id == node.id);
@@ -310,7 +312,9 @@ class _GoalRootPageState extends State<GoalRootPage> {
       );
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         SnackBar(
             content: Text('Failed to delete goal: $e'),
             backgroundColor: Colors.red),
@@ -422,8 +426,8 @@ class _GoalRootPageState extends State<GoalRootPage> {
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black, size: 28),
             onPressed: () {
-              _showCreateRootGoalDialog(
-                  context, Provider.of<UserProvider>(context).userId!,
+              _showCreateRootGoalDialog(context,
+                  Provider.of<UserProvider>(context, listen: false).userId!,
                   onGoalAdded: _fetchGoals);
             },
           ),
@@ -566,74 +570,67 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: left,
-      top: top,
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onPanStart: (_) => isDragging = true,
-            onPanUpdate: (details) {
-              setState(() {
-                left += details.delta.dx;
-                top += details.delta.dy;
-              });
-            },
-            onPanEnd: (_) {
-              setState(() {
-                isDragging = false;
-                left = widget.offset.dx;
-                top = widget.offset.dy;
-              });
-            },
-            onLongPress: _showDeleteDialog,
-            child: Container(
-              width: GOAL_WIDGET_WIDTH,
-              height: GOAL_WIDGET_HEIGHT,
-              decoration: BoxDecoration(
-                color: themeProvider.isDarkMode
-                    ? Colors.grey.shade900
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: themeProvider.isDarkMode
-                      ? Colors.white24
-                      : Colors.black12,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (themeProvider.isDarkMode ? Colors.black : Colors.grey)
-                            .withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanStart: (_) => isDragging = true,
+          onPanUpdate: (details) {
+            setState(() {
+              left += details.delta.dx;
+              top += details.delta.dy;
+            });
+          },
+          onPanEnd: (_) {
+            setState(() {
+              isDragging = false;
+              left = widget.offset.dx;
+              top = widget.offset.dy;
+            });
+          },
+          onLongPress: _showDeleteDialog,
+          child: Container(
+            width: GOAL_WIDGET_WIDTH,
+            height: GOAL_WIDGET_HEIGHT,
+            decoration: BoxDecoration(
+              color: themeProvider.isDarkMode
+                  ? Colors.grey.shade900
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color:
+                    themeProvider.isDarkMode ? Colors.white24 : Colors.black12,
+                width: 1,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Center(
-                  child: Text(
-                    widget.treeNode.name ?? "Goal Name",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: themeProvider.isDarkMode
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+              boxShadow: [
+                BoxShadow(
+                  color: (themeProvider.isDarkMode ? Colors.black : Colors.grey)
+                      .withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Center(
+                child: Text(
+                  widget.treeNode.name ?? "Goal Name",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color:
+                        themeProvider.isDarkMode ? Colors.white : Colors.black,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
