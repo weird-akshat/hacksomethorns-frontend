@@ -133,9 +133,7 @@ Content-Type: application/json
   "goal_name": "Learn Django"
 }
 ```
-
 ### Journal Entries API
-
 #### List All Journal Entries
 **Endpoint:** `GET /api/journal-entries/`
 
@@ -191,6 +189,84 @@ Content-Type: application/json
   "task_name": "Setup Django Project",
   "username": "john_doe"
 }
+```
+
+#### Get Journal Entries by Date
+**Endpoint:** `GET /api/journal-entries/by_date/`
+
+**Query Parameters:**
+- `date` (required): Date in YYYY-MM-DD format
+
+**Example:** `GET /api/journal-entries/by_date/?date=2025-06-22`
+
+**Headers:**
+```
+Authorization: Token <your_token>
+```
+
+**Response:**
+```json
+[
+  {
+    "user": 1,
+    "goal": 1,
+    "task": 1,
+    "entry_date": "2025-06-22",
+    "content": "<p>First entry for today</p>",
+    "goal_name": "Learn Django",
+    "task_name": "Setup Django Project",
+    "username": "john_doe"
+  },
+  {
+    "user": 1,
+    "goal": 1,
+    "task": 2,
+    "entry_date": "2025-06-22",
+    "content": "<p>Second entry for today</p>",
+    "goal_name": "Learn Django",
+    "task_name": "Create REST APIs",
+    "username": "john_doe"
+  }
+]
+```
+
+#### Get Journal Entries by Task
+**Endpoint:** `GET /api/journal-entries/by_task/`
+
+**Query Parameters:**
+- `task_id` (required): Task ID
+
+**Example:** `GET /api/journal-entries/by_task/?task_id=1`
+
+**Headers:**
+```
+Authorization: Token <your_token>
+```
+
+**Response:**
+```json
+[
+  {
+    "user": 1,
+    "goal": 1,
+    "task": 1,
+    "entry_date": "2025-06-21",
+    "content": "<p>Started working on this task</p>",
+    "goal_name": "Learn Django",
+    "task_name": "Setup Django Project",
+    "username": "john_doe"
+  },
+  {
+    "user": 1,
+    "goal": 1,
+    "task": 1,
+    "entry_date": "2025-06-22",
+    "content": "<p>Continued progress on the task</p>",
+    "goal_name": "Learn Django",
+    "task_name": "Setup Django Project",
+    "username": "john_doe"
+  }
+]
 ```
 ## Content Format
 
