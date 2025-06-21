@@ -646,7 +646,9 @@ class _GoalState extends State<GoalWidget> {
                             if (widget.onGoalUpdated != null) {
                               widget.onGoalUpdated!();
                             }
+
                             Navigator.pop(context);
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Goal updated!'),

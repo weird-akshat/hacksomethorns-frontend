@@ -9,14 +9,16 @@ Future<TreeNode> updateGoalFromNode({
   required TreeNode node,
 }) async {
   final baseUrl = dotenv.env['API_URL'];
-  final url = Uri.parse('${baseUrl}api/users/{$userId}/goals/{$goalId}/');
+  final url = Uri.parse('${baseUrl}api/users/1/goals/${node.id}/');
 
+  print(url);
   final response = await http.put(
     url,
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode(node.toJson(userId)),
   );
-
+  print(response.body);
+  print(response.statusCode);
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
     return TreeNode(
@@ -27,8 +29,8 @@ Future<TreeNode> updateGoalFromNode({
       ..parentId = data['parent']
       ..status = data['status']
       ..priority = data['priority']
-      ..deadline = data['deadline']
-      ..isGroupGoal = data['is_group_goal'];
+      ..deadline = data['deadline'];
+    // ..isGroupGoal = data['is_group_goal'];
   } else {
     throw Exception('Failed to update goal: ${response.body}');
   }

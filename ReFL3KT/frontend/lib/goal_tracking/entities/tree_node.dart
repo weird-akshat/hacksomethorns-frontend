@@ -42,10 +42,9 @@ class TreeNode {
       'id': id,
       'user': userId,
       'parent': parentId,
-      'status': status,
+      'status': status == "active" ? "not_started" : "completed",
       'priority': priority,
       'deadline': deadline,
-      'is_group_goal': isGroupGoal,
     };
   }
 }

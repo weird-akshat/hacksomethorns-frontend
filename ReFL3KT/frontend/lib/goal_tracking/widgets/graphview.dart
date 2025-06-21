@@ -61,6 +61,8 @@ class _GraphViewState extends State<GraphView> {
       treeNode: node,
       onChildAdded: _refreshLayout,
       onGoalDeleted: _refreshLayout,
+      onGoalUpdated: _refreshLayout,
+      onParentChanged: _refreshLayout,
     ));
 
     for (var child in node.children) {
