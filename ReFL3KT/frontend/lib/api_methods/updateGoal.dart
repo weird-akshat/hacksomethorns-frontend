@@ -12,12 +12,13 @@ Future<TreeNode> updateGoalFromNode({
   final url = Uri.parse('${baseUrl}api/users/1/goals/${node.id}/');
 
   print(url);
-
-  print(node.toJson());
+  print(node.toJson(userId));
+  print(goalId);
+  // print(node.toJson());0
   final response = await http.put(
     url,
     headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(node.toJson()),
+    body: jsonEncode(node.toJson(userId)),
   );
   print(response.body);
   print(response.statusCode);

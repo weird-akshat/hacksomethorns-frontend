@@ -574,33 +574,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
           children: [
             // Checkbox for non-recurring tasks
             if (!task.isRecurring)
-              GestureDetector(
-                onTap: () => _toggleTaskCompletion(task),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: task.isComplete
-                        ? themeProvider.primaryAccent
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: task.isComplete
-                          ? themeProvider.primaryAccent
-                          : themeProvider.subtleAccent,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: task.isComplete
-                      ? Icon(
-                          Icons.check,
-                          size: 14,
-                          color: Colors.white,
-                        )
-                      : null,
-                ),
-              ),
-            if (!task.isRecurring) SizedBox(width: 8),
+              if (!task.isRecurring) SizedBox(width: 8),
             // Status indicator circle
             Container(
               width: 12,

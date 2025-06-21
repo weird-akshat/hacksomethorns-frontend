@@ -322,6 +322,47 @@ class _GoalRootPageState extends State<GoalRootPage> {
     }
   }
 
+  // NEW: Method to update goal completion status
+  Future<void> _updateGoalStatus(TreeNode node, bool isCompleted) async {
+    setState(() => _isLoading = true);
+    try {
+      // Update the node status
+      node.status = isCompleted ? 'completed' : 'active';
+
+      // Call API to update the goal on the server
+      await postGoalFromTreeNode(
+        node,
+        Provider.of<UserProvider>(context, listen: false).userId!,
+      );
+
+      setState(() {
+        // Update the local list
+        final index = list.indexWhere((g) => g.id == node.id);
+        if (index != -1) {
+          list[index] = node;
+        }
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isCompleted
+              ? 'Goal "${node.name}" marked as completed!'
+              : 'Goal "${node.name}" marked as active!'),
+          backgroundColor: isCompleted ? Colors.green : Colors.blue,
+        ),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update goal: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showAddGoalDialog() {
     _goalController.clear();
     showDialog(
@@ -464,6 +505,9 @@ class _GoalRootPageState extends State<GoalRootPage> {
                                   (list.length + 1),
                             ),
                             onGoalDeleted: () => _deleteGoal(goal),
+                            onGoalStatusChanged: (isCompleted) =>
+                                _updateGoalStatus(
+                                    goal, isCompleted), // NEW: Pass callback
                           ),
                         );
                       },
@@ -478,12 +522,14 @@ class RootGoalWidget extends StatefulWidget {
   final TreeNode treeNode;
   final Offset offset;
   final VoidCallback? onGoalDeleted;
+  final Function(bool)? onGoalStatusChanged; // NEW: Callback for status change
 
   const RootGoalWidget({
     super.key,
     required this.offset,
     required this.treeNode,
     this.onGoalDeleted,
+    this.onGoalStatusChanged, // NEW: Add to constructor
   });
 
   @override
@@ -572,6 +618,9 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        final isCompleted = widget.treeNode.status ==
+            'completed'; // NEW: Check completion status
+
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
           onPanStart: (_) => isDragging = true,
@@ -593,13 +642,20 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
             width: GOAL_WIDGET_WIDTH,
             height: GOAL_WIDGET_HEIGHT,
             decoration: BoxDecoration(
-              color: themeProvider.isDarkMode
-                  ? Colors.grey.shade900
-                  : Colors.white,
+              color: isCompleted // NEW: Change color based on completion
+                  ? (themeProvider.isDarkMode
+                      ? Colors.green.shade800
+                      : Colors.green.shade100)
+                  : (themeProvider.isDarkMode
+                      ? Colors.grey.shade900
+                      : Colors.white),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color:
-                    themeProvider.isDarkMode ? Colors.white24 : Colors.black12,
+                color: isCompleted
+                    ? Colors.green
+                    : (themeProvider.isDarkMode
+                        ? Colors.white24
+                        : Colors.black12),
                 width: 1,
               ),
               boxShadow: [
@@ -613,19 +669,60 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
             ),
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Center(
-                child: Text(
-                  widget.treeNode.name ?? "Goal Name",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color:
-                        themeProvider.isDarkMode ? Colors.white : Colors.black,
+              child: Column(
+                children: [
+                  // NEW: Add checkbox at the top
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.treeNode.name ?? "Goal Name",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: themeProvider.isDarkMode
+                                ? Colors.white
+                                : Colors.black,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null, // NEW: Strike through when completed
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          if (widget.onGoalStatusChanged != null) {
+                            widget.onGoalStatusChanged!(!isCompleted);
+                          }
+                        },
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCompleted ? Colors.green : Colors.grey,
+                              width: 2,
+                            ),
+                            color:
+                                isCompleted ? Colors.green : Colors.transparent,
+                          ),
+                          child: isCompleted
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
+                ],
               ),
             ),
           ),

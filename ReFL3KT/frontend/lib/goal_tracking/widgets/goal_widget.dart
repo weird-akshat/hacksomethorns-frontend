@@ -122,18 +122,18 @@ class _GoalState extends State<GoalWidget> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showUpdateGoalDialog();
-                  },
-                  icon: Icon(Icons.edit),
-                  label: Text('Update Goal'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+                // ElevatedButton.icon(
+                //   onPressed: () {
+                //     Navigator.pop(context);
+                //     _showUpdateGoalDialog();
+                //   },
+                //   icon: Icon(Icons.edit),
+                //   label: Text('Update Goal'),
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.green,
+                //     foregroundColor: Colors.white,
+                //   ),
+                // ),
               ],
             );
           },

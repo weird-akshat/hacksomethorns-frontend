@@ -35,12 +35,12 @@ class TreeNode {
     newParent.children.add(this);
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson(String userId) {
     return {
       "name": name,
       "description": description?.isEmpty == true ? null : description,
-      "user": '1',
-      "parent": parentId,
+      "user": userId,
+      "parent": parent?.id ?? null,
       "priority": priority,
       "deadline": deadline?.toIso8601String(),
       "is_group_goal": isGroupGoal,
