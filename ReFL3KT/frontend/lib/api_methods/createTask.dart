@@ -11,14 +11,22 @@ Future<Task> createTask(String userId, int goalId, Task task) async {
   // print(uri);
 
   print("post");
-
+  print(JsonEncoder.withIndent('  ').convert({
+    'title': task.name,
+    'description': '',
+    'goal': goalId,
+    'category': task.category,
+    'is_recurring': task.isRecurring,
+    'due_date': DateTime.now().toIso8601String(),
+    'estimated_time': (task.timeSpent * 60).toInt(),
+  }));
   final response = await http.post(
     uri,
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'title': task.name,
       'description': '',
-      'goal': goalId,
+      // 'goal': goalId,
       'category': task.category,
       'is_recurring': task.isRecurring,
       'due_date': DateTime.now().toIso8601String(),

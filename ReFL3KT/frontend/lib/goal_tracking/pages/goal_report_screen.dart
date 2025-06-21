@@ -48,11 +48,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
       isError = false;
     });
     try {
-      print("brother");
       final fetchedTasks =
           await fetchTasksForGoal(widget.userId, widget.goal.id);
-
-      print('object111');
       final fetchedAnalytics =
           await fetchGoalAnalytics(widget.userId, widget.goal.id);
       setState(() {
@@ -210,7 +207,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                             isComplete: task?.isComplete ?? false,
                             timeSpent: task?.timeSpent ?? 0.0,
                           );
-
                           if (task == null) {
                             _addTask(newTask);
                           } else {
@@ -317,11 +313,12 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     );
   }
 
+  // FIX: Use immediate_children for chart data
   List<ChartData> get chartData {
-    final taskDist = analytics?['task_distribution'];
-    if (taskDist == null) return [];
-    return taskDist.entries.map((entry) {
-      return ChartData(entry.key, entry.value.toDouble());
+    final children = analytics?['immediate_children'];
+    if (children == null) return [];
+    return children.entries.map<ChartData>((entry) {
+      return ChartData(entry.key, (entry.value as num).toDouble());
     }).toList();
   }
 
@@ -332,7 +329,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         if (isLoading) {
           return Center(child: CircularProgressIndicator());
         }
-
         if (isError) {
           return Center(
               child: Text('Failed to load data',
@@ -495,14 +491,15 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 : TextDecoration.none,
           ),
         ),
-        subtitle: Text(
-          '${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
-          style: TextStyle(
-            color: isCompletedNonRecurring
-                ? themeProvider.subtleAccent.withOpacity(0.6)
-                : themeProvider.subtleAccent,
-          ),
-        ),
+        // REMOVED: subtitle showing time spent
+        // subtitle: Text(
+        //   '${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
+        //   style: TextStyle(
+        //     color: isCompletedNonRecurring
+        //         ? themeProvider.subtleAccent.withOpacity(0.6)
+        //         : themeProvider.subtleAccent,
+        //   ),
+        // ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
