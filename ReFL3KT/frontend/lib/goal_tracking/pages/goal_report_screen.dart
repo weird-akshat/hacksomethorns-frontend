@@ -8,10 +8,11 @@ import 'package:frontend/api_methods/update_task.dart';
 import 'package:frontend/goal_tracking/entities/task.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_picker.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ChartData {
   ChartData(this.task, this.duration);
@@ -21,8 +22,8 @@ class ChartData {
 
 class GoalReportScreen extends StatefulWidget {
   final TreeNode goal;
-  final String userId;
-  const GoalReportScreen({super.key, required this.goal, required this.userId});
+  // final String userId;
+  const GoalReportScreen({super.key, required this.goal});
 
   @override
   State<GoalReportScreen> createState() => _GoalReportScreenState();
@@ -48,10 +49,10 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
       isError = false;
     });
     try {
-      final fetchedTasks =
-          await fetchTasksForGoal(widget.userId, widget.goal.id);
-      final fetchedAnalytics =
-          await fetchGoalAnalytics(widget.userId, widget.goal.id);
+      final fetchedTasks = await fetchTasksForGoal(
+          Provider.of<UserProvider>(context).userId!, widget.goal.id);
+      final fetchedAnalytics = await fetchGoalAnalytics(
+          Provider.of<UserProvider>(context).userId!, widget.goal.id);
       setState(() {
         tasks = fetchedTasks;
         analytics = fetchedAnalytics;
@@ -68,7 +69,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   Future<void> _addTask(Task task) async {
     setState(() => isLoading = true);
     try {
-      await createTask(widget.userId.toString(), widget.goal.id, task);
+      await createTask(
+          Provider.of<UserProvider>(context).userId!, widget.goal.id, task);
       await _loadData();
     } catch (_) {
       setState(() => isLoading = false);
@@ -79,7 +81,9 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     setState(() => isLoading = true);
     try {
       await updateTask(
-          userId: widget.userId, goalId: widget.goal.id, task: task);
+          userId: Provider.of<UserProvider>(context).userId!,
+          goalId: widget.goal.id,
+          task: task);
       await _loadData();
     } catch (_) {
       setState(() => isLoading = false);
@@ -90,7 +94,9 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     setState(() => isLoading = true);
     try {
       await deleteTask(
-          userId: widget.userId, goalId: widget.goal.id, taskId: task.id);
+          userId: Provider.of<UserProvider>(context).userId!,
+          goalId: widget.goal.id,
+          taskId: task.id);
       await _loadData();
     } catch (_) {
       setState(() => isLoading = false);

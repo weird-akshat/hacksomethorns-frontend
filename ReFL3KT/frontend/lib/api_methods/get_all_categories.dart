@@ -8,6 +8,7 @@ Future<List<Category>> getAllCategories(String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
   String? nextUrl = "${apiUrl}api/users/$userId/categories/";
   List<Category> allCategories = [];
+  print(nextUrl);
 
   try {
     while (nextUrl != null) {

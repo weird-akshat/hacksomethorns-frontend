@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/api_methods/get_category_analytics.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
@@ -55,7 +56,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
       });
 
       final data = await getCategoryAnalytics(
-        userId: "1",
+        userId: Provider.of<UserProvider>(context, listen: false).userId!,
         categoryId: widget.category.categoryId,
         startTime: widget.startTime,
         endTime: widget.endTime,
@@ -919,7 +920,7 @@ class _CategoryDetailedAnalyticsState extends State<CategoryDetailedAnalytics> {
             return TimeEntry(
               timeEntryId: entry['_timeEntryId'] ?? '',
               description: entry['_description'] ?? 'Untitled',
-              userId: widget.category.userId,
+              userId: Provider.of<UserProvider>(context).userId!,
               startTime: DateTime.parse(entry['_startTime']),
               endTime: DateTime.parse(entry['_endTime']),
               categoryId: entry['_categoryId'] ?? 0,

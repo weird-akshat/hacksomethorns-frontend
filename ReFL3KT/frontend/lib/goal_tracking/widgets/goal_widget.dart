@@ -5,6 +5,7 @@ import 'package:frontend/api_methods/updateGoal.dart';
 import 'package:frontend/goal_tracking/pages/goal_report_screen.dart';
 import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
@@ -260,7 +261,7 @@ class _GoalState extends State<GoalWidget> {
   Future<void> _deleteGoal() async {
     try {
       await deleteUserGoal(
-        userId: widget.userId,
+        userId: Provider.of<UserProvider>(context).userId!,
         goalId: widget.treeNode.id!,
       );
 
@@ -759,7 +760,8 @@ class _GoalState extends State<GoalWidget> {
 
                                 try {
                                   await updateGoalFromNode(
-                                    userId: widget.userId,
+                                    userId: Provider.of<UserProvider>(context)
+                                        .userId!,
                                     goalId: widget.treeNode.id!,
                                     node: widget.treeNode,
                                   );
@@ -830,7 +832,6 @@ class _GoalState extends State<GoalWidget> {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (builder) => GoalReportScreen(
                         goal: widget.treeNode,
-                        userId: "1",
                       )));
             },
             onPanStart: (_) => isDragging = true,

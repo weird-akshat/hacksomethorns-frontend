@@ -41,8 +41,8 @@ class TimelogProvider with ChangeNotifier {
     return DateTime(date.year, date.month, date.day);
   }
 
-  Future<void> loadTimeEntries() async {
-    map = await fetchTimeEntries();
+  Future<void> loadTimeEntries(String userId) async {
+    map = await fetchTimeEntries(userId);
     sort();
     notifyListeners();
   }

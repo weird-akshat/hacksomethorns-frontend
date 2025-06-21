@@ -8,6 +8,7 @@ import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/goal_tracking/pages/tree_screen.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
 class GoalRootPage extends StatefulWidget {
@@ -175,7 +176,7 @@ class _GoalRootPageState extends State<GoalRootPage> {
                                   final TreeNode returnedGoal =
                                       await postGoalFromTreeNode(
                                     rootGoal,
-                                    "1",
+                                    Provider.of<UserProvider>(context).userId!,
                                   );
                                   if (onGoalAdded != null) {
                                     onGoalAdded();
@@ -248,8 +249,8 @@ class _GoalRootPageState extends State<GoalRootPage> {
       _error = null;
     });
     try {
-      final fetchedList =
-          await fetchGoalTree("1"); // Replace with actual user ID
+      final fetchedList = await fetchGoalTree(
+          Provider.of<UserProvider>(context, listen: false).userId!);
       setState(() {
         list = fetchedList;
         _isLoading = false;
@@ -270,7 +271,9 @@ class _GoalRootPageState extends State<GoalRootPage> {
         name: name,
       );
       final created = await postGoalFromTreeNode(
-          newGoal, "1"); // Replace with actual user ID
+          newGoal,
+          Provider.of<UserProvider>(context)
+              .userId!); // Replace with actual user ID
       setState(() {
         list.add(created);
         _isLoading = false;
@@ -294,7 +297,8 @@ class _GoalRootPageState extends State<GoalRootPage> {
     setState(() => _isLoading = true);
     try {
       await deleteUserGoal(
-          userId: "1", goalId: node.id!); // Replace with actual user ID
+          userId: Provider.of<UserProvider>(context).userId!,
+          goalId: node.id!); // Replace with actual user ID
       setState(() {
         list.removeWhere((g) => g.id == node.id);
         _isLoading = false;
@@ -418,7 +422,9 @@ class _GoalRootPageState extends State<GoalRootPage> {
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black, size: 28),
             onPressed: () {
-              _showCreateRootGoalDialog(context, "1", onGoalAdded: _fetchGoals);
+              _showCreateRootGoalDialog(
+                  context, Provider.of<UserProvider>(context).userId!,
+                  onGoalAdded: _fetchGoals);
             },
           ),
         ],

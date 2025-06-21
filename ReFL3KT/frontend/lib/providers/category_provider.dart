@@ -15,11 +15,11 @@ class CategoryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addCategory(Category category) async {
+  Future<bool> addCategory(Category category, String userId) async {
     bool success = await postCategory(category);
     if (success) {
       // Reload categories to get the updated list from server
-      await loadCategories(category.userId);
+      await loadCategories(userId);
     }
     return success;
   }

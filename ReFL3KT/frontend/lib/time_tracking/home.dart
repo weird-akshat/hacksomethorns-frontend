@@ -23,13 +23,24 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Widget currentWidgetPage = const TimeTrackingPage();
+  Widget currentWidgetPage = TimeTrackingPage();
   bool isLoading = true;
+  // bool isLoading = true;
+  bool _hasLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasLoaded) {
+      _hasLoaded = true;
+      _loadData();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // _loadData();
   }
 
   Future<void> _loadData() async {
@@ -37,18 +48,21 @@ class _HomeState extends State<Home> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.isEmpty()) {
-      await categoryProvider.loadCategories('1');
+      await categoryProvider
+          .loadCategories(Provider.of<UserProvider>(context).userId!);
     }
 
     final timelogProvider =
         Provider.of<TimelogProvider>(context, listen: false);
     if (timelogProvider.isEmpty()) {
-      await timelogProvider.loadTimeEntries();
+      await timelogProvider.loadTimeEntries(
+          Provider.of<UserProvider>(context, listen: false).userId!);
     }
 
     final currentEntryProvider =
         Provider.of<CurrentTimeEntryProvider>(context, listen: false);
-    await currentEntryProvider.loadCurrentEntry("1");
+    await currentEntryProvider.loadCurrentEntry(
+        Provider.of<UserProvider>(context, listen: false).userId!);
 
     setState(() => isLoading = false);
   }
@@ -136,6 +150,7 @@ class _HomeState extends State<Home> {
               padding: EdgeInsets.all(8.0),
               child: Text('Menu'),
             ),
+
             const Divider(),
             ListTile(
               title: const Text('Time Tracking Page'),

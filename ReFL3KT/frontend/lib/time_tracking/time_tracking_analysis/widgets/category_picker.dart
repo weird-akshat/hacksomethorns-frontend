@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/category_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +29,9 @@ class _CategoryPickerState extends State<CategoryPicker> {
         Provider.of<CategoryProvider>(context, listen: false);
 
     if (categoryProvider.isEmpty()) {
-      categoryProvider.loadCategories('1'); // Replace with actual userId
+      categoryProvider.loadCategories(
+        Provider.of<UserProvider>(context, listen: false).userId!,
+      ); // Replace with actual userId
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -190,7 +193,8 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
 
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
-    final success = await categoryProvider.addCategory(category);
+    final success = await categoryProvider.addCategory(
+        category, Provider.of<UserProvider>(context).userId!);
 
     setState(() {
       _isLoading = false;

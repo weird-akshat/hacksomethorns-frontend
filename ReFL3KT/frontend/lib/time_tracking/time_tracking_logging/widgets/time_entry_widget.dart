@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/api_methods/delete_time_entry.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_entry_sheet.dart';
@@ -77,7 +78,8 @@ class _TimeEntryWidgetState extends State<TimeEntryWidget> {
               widget.timeEntry.endTime = DateTime(1970, 1, 1, 5, 30);
 
               // Call the delete API
-              bool deleteSuccess = await deleteTimeEntry(widget.timeEntry);
+              bool deleteSuccess = await deleteTimeEntry(
+                  widget.timeEntry, Provider.of<UserProvider>(context).userId!);
 
               if (deleteSuccess) {
                 // Show success message
