@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class ApiServiceAnalytics {
   static String baseUrl = dotenv.env['API_URL']!;
@@ -8,6 +10,7 @@ class ApiServiceAnalytics {
   static Future<Map<String, String>> getCategoryTimeSpentMap(
     String userID,
   ) async {
+    ;
     final url = Uri.parse(
       '${baseUrl}api/users/$userID/time-entries/analytics/?_startTime=2000-01-01&_endTime=2025-12-31',
     );

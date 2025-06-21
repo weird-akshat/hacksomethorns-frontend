@@ -1,9 +1,10 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthApiService {
-  final String baseURL = 'https://mangoes-9jzh.onrender.com';
+  final String? baseURL = dotenv.env['auth_url'];
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
   Future<String?> registerUser(
