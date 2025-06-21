@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/analytics_screen.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
@@ -9,7 +10,10 @@ import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart'
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
+import 'package:frontend/user_auth/api_service_auth.dart';
+import 'package:frontend/user_auth/login_screen.dart';
 import 'package:provider/provider.dart';
+// Add these imports
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -47,6 +51,21 @@ class _HomeState extends State<Home> {
     await currentEntryProvider.loadCurrentEntry("1");
 
     setState(() => isLoading = false);
+  }
+
+  // Logout function
+  Future<void> _logout() async {
+    // Clear user provider
+    Provider.of<UserProvider>(context, listen: false).clearUser();
+
+    // Call API service logout
+    await AuthApiService().signOut();
+
+    // Navigate to login screen and clear history
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
   }
 
   @override
@@ -143,15 +162,22 @@ class _HomeState extends State<Home> {
                 });
               },
             ),
-            // ListTile(
-            //   title: const Text('Goal Root Page'),
-            //   onTap: () {
-            //     Navigator.of(context).pop();
-            //     setState(() {
-            //       currentWidgetPage = const GoalRootPage();
-            //     });
-            //   },
-            // ),
+            ListTile(
+              title: const Text('Goal Root Page'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  currentWidgetPage = const GoalRootPage();
+                });
+              },
+            ),
+            // Add logout option here
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: _logout,
+            ),
           ],
         ),
       ),
