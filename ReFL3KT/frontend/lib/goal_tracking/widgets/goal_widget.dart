@@ -460,6 +460,14 @@ class _GoalState extends State<GoalWidget> {
                                     widget.onChildAdded!();
                                     childNode.id = returnedGoal.id;
                                     childNode.name = returnedGoal.name;
+                                    childNode.deadline = returnedGoal.deadline;
+                                    childNode.isGroupGoal =
+                                        returnedGoal.isGroupGoal;
+                                    childNode.description =
+                                        returnedGoal.description;
+                                    childNode.parentId = returnedGoal.parentId;
+                                    childNode.priority = returnedGoal.priority;
+                                    childNode.status = returnedGoal.status;
                                   }
                                   Navigator.pop(context);
                                   if (mounted) {
