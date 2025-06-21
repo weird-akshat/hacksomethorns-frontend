@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 Future<Task> createTask(String userId, int goalId, Task task) async {
   final String apiUrl = dotenv.env['API_URL']!;
-  final uri = Uri.parse('$apiUrl/users/$userId/goals/$goalId/tasks/');
+  final uri = Uri.parse('${apiUrl}users/$userId/goals/$goalId/tasks/');
 
   final response = await http.post(
     uri,

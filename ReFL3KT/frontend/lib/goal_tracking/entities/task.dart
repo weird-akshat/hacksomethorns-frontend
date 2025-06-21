@@ -1,8 +1,7 @@
-// Task Model
 class Task {
   String id;
   String name;
-  int category;
+  int? category;
   bool isRecurring;
   bool isComplete;
   double timeSpent; // in hours
@@ -39,8 +38,8 @@ class Task {
       id: json['id'].toString(),
       name: json['title'],
       category: json['category'],
-      isRecurring: json['is_recurring'],
-      isComplete: json['is_complete'] ?? false,
+      isRecurring: json['is_recurring'] ?? false,
+      isComplete: json['status'] == 'completed',
       timeSpent: (json['estimated_time'] ?? 0) / 60.0,
     );
   }

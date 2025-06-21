@@ -7,6 +7,7 @@ Future<Map<String, dynamic>?> getUserTimeAnalytics({
   required DateTime start,
   required DateTime end,
 }) async {
+  print('object');
   final String apiUrl = dotenv.env['API_URL']!;
   final uri = Uri.parse(
     "${apiUrl}api/users/$userId/time-entries/analytics/"
@@ -17,6 +18,7 @@ Future<Map<String, dynamic>?> getUserTimeAnalytics({
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
+      print(response);
       return jsonDecode(response.body);
     } else {
       print("Failed to fetch analytics: ${response.statusCode}");

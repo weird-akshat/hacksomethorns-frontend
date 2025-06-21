@@ -4,13 +4,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/goal_tracking/entities/task.dart';
 
 Future<Task> updateTask({
-  required int userId,
+  required String userId,
   required int goalId,
   required Task task,
 }) async {
   final String apiUrl = dotenv.env['API_URL']!;
   final uri =
-      Uri.parse('$apiUrl/users/$userId/goals/$goalId/tasks/${task.id}/');
+      Uri.parse('$apiUrl/users/${userId}goals/$goalId/tasks/${task.id}/');
 
   final body = jsonEncode({
     'title': task.name,

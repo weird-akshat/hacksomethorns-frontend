@@ -689,8 +689,10 @@ class _GoalState extends State<GoalWidget> {
           return GestureDetector(
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (builder) =>
-                      GoalReportScreen(goal: widget.treeNode)));
+                  builder: (builder) => GoalReportScreen(
+                        goal: widget.treeNode,
+                        userId: "1",
+                      )));
             },
             onPanStart: (_) => isDragging = true,
             onPanUpdate: (details) {

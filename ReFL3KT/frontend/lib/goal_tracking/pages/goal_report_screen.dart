@@ -1,4 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:frontend/api_methods/createTask.dart';
+import 'package:frontend/api_methods/delete_task.dart';
+import 'package:frontend/api_methods/fetch_tasks_for_goal.dart';
+import 'package:frontend/api_methods/get_goal_analytics.dart';
+import 'package:frontend/api_methods/update_task.dart';
 import 'package:frontend/goal_tracking/entities/task.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/providers/theme_provider.dart';
@@ -7,7 +13,6 @@ import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_p
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:provider/provider.dart';
 
-// Chart Data Model
 class ChartData {
   ChartData(this.task, this.duration);
   final String task;
@@ -16,45 +21,83 @@ class ChartData {
 
 class GoalReportScreen extends StatefulWidget {
   final TreeNode goal;
-  const GoalReportScreen({super.key, required this.goal});
+  final String userId;
+  const GoalReportScreen({super.key, required this.goal, required this.userId});
+
   @override
-  _GoalReportScreenState createState() => _GoalReportScreenState();
+  State<GoalReportScreen> createState() => _GoalReportScreenState();
 }
 
 class _GoalReportScreenState extends State<GoalReportScreen> {
-  List<Task> tasks = [
-    Task(
-        id: '4',
-        name: 'Meditation',
-        category: 5,
-        isRecurring: true,
-        timeSpent: 6.7),
-    Task(
-        id: '5',
-        name: 'Project Planning',
-        category: 5,
-        isRecurring: false,
-        timeSpent: 15.2),
-    Task(
-        id: '6',
-        name: 'Grocery Shopping',
-        category: 5,
-        isRecurring: false,
-        timeSpent: 2.5,
-        isComplete: true),
-  ];
-
   late TooltipBehavior _tooltipBehavior;
+  bool isLoading = true;
+  bool isError = false;
+  List<Task> tasks = [];
+  Map<String, dynamic>? analytics;
 
   @override
   void initState() {
     super.initState();
     _tooltipBehavior = TooltipBehavior(enable: true);
+    _loadData();
   }
 
-  List<ChartData> get chartData {
-    // Include all tasks, regardless of completion status
-    return tasks.map((task) => ChartData(task.name, task.timeSpent)).toList();
+  Future<void> _loadData() async {
+    setState(() {
+      isLoading = true;
+      isError = false;
+    });
+    try {
+      print("brother");
+      final fetchedTasks =
+          await fetchTasksForGoal(widget.userId, widget.goal.id);
+
+      print('object111');
+      final fetchedAnalytics =
+          await fetchGoalAnalytics(widget.userId, widget.goal.id);
+      setState(() {
+        tasks = fetchedTasks;
+        analytics = fetchedAnalytics;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        isError = true;
+      });
+    }
+  }
+
+  Future<void> _addTask(Task task) async {
+    setState(() => isLoading = true);
+    try {
+      await createTask(widget.userId.toString(), widget.goal.id, task);
+      await _loadData();
+    } catch (_) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _updateTask(Task task) async {
+    setState(() => isLoading = true);
+    try {
+      await updateTask(
+          userId: widget.userId, goalId: widget.goal.id, task: task);
+      await _loadData();
+    } catch (_) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _deleteTask(Task task) async {
+    setState(() => isLoading = true);
+    try {
+      await deleteTask(
+          userId: widget.userId, goalId: widget.goal.id, taskId: task.id);
+      await _loadData();
+    } catch (_) {
+      setState(() => isLoading = false);
+    }
   }
 
   void _toggleTaskCompletion(Task task) {
@@ -77,7 +120,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   void _showTaskDialog({Task? task}) {
     final nameController = TextEditingController(text: task?.name ?? '');
     bool isRecurring = task?.isRecurring ?? false;
-    // Support both int and String category, adapt as needed
     Category? selectedCategory;
 
     showDialog(
@@ -157,19 +199,22 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                       onPressed: () {
                         if (nameController.text.isNotEmpty &&
                             selectedCategory != null) {
+                          final newTask = Task(
+                            id: task?.id ??
+                                DateTime.now()
+                                    .millisecondsSinceEpoch
+                                    .toString(),
+                            name: nameController.text,
+                            category: selectedCategory!.categoryId,
+                            isRecurring: isRecurring,
+                            isComplete: task?.isComplete ?? false,
+                            timeSpent: task?.timeSpent ?? 0.0,
+                          );
+
                           if (task == null) {
-                            _addTask(
-                              nameController.text,
-                              selectedCategory,
-                              isRecurring,
-                            );
+                            _addTask(newTask);
                           } else {
-                            _updateTask(
-                              task,
-                              nameController.text,
-                              selectedCategory,
-                              isRecurring,
-                            );
+                            _updateTask(newTask);
                           }
                           Navigator.of(context).pop();
                         }
@@ -216,37 +261,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         fillColor: themeProvider.scaffoldColor,
       ),
     );
-  }
-
-  void _addTask(String name, dynamic category, bool isRecurring) {
-    setState(() {
-      tasks.add(Task(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        category: category,
-        isRecurring: isRecurring,
-        timeSpent: (5 + (tasks.length * 3.5)) % 30, // Random time for demo
-      ));
-    });
-  }
-
-  void _updateTask(Task task, String name, dynamic category, bool isRecurring) {
-    setState(() {
-      final index = tasks.indexWhere((t) => t.id == task.id);
-      if (index != -1) {
-        tasks[index] = task.copyWith(
-          name: name,
-          category: category,
-          isRecurring: isRecurring,
-        );
-      }
-    });
-  }
-
-  void _deleteTask(Task task) {
-    setState(() {
-      tasks.removeWhere((t) => t.id == task.id);
-    });
   }
 
   void _showTaskOptionsDialog(Task task) {
@@ -303,15 +317,33 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     );
   }
 
+  List<ChartData> get chartData {
+    final taskDist = analytics?['task_distribution'];
+    if (taskDist == null) return [];
+    return taskDist.entries.map((entry) {
+      return ChartData(entry.key, entry.value.toDouble());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        if (isLoading) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (isError) {
+          return Center(
+              child: Text('Failed to load data',
+                  style: TextStyle(color: themeProvider.textColor)));
+        }
+
         return Scaffold(
           backgroundColor: themeProvider.scaffoldColor,
           appBar: AppBar(
             title: Text(
-              'Goal Report',
+              'Goal Report: ${widget.goal.name}',
               style: TextStyle(
                 color: themeProvider.textColor,
                 fontWeight: FontWeight.bold,
@@ -463,7 +495,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 : TextDecoration.none,
           ),
         ),
-        // Only show time spent and completed status, not category
         subtitle: Text(
           '${task.timeSpent.toStringAsFixed(1)}h${isCompletedNonRecurring ? ' • Completed' : ''}',
           style: TextStyle(
@@ -519,6 +550,10 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   Widget _buildChartsSection(ThemeProvider themeProvider) {
+    if (analytics == null) {
+      return SizedBox(); // Or a placeholder
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -553,7 +588,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
               ),
               SizedBox(height: 16),
               Container(
-                height: 400, // Increased height for better legend display
+                height: 400,
                 child: SfCircularChart(
                   tooltipBehavior: _tooltipBehavior,
                   legend: Legend(
@@ -565,7 +600,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                     position: LegendPosition.bottom,
                     overflowMode: LegendItemOverflowMode.wrap,
                     itemPadding: 8,
-                    height: '30%', // Allocate more space for legend
+                    height: '30%',
                   ),
                   series: <CircularSeries<ChartData, String>>[
                     DoughnutSeries<ChartData, String>(
@@ -606,6 +641,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         ),
 
         SizedBox(height: 24),
+
         // Bar Chart
         Container(
           decoration: BoxDecoration(
@@ -627,7 +663,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
               ),
               SizedBox(height: 16),
               Container(
-                height: 350, // Increased height for better label display
+                height: 350,
                 child: SfCartesianChart(
                   primaryXAxis: CategoryAxis(
                     labelStyle: TextStyle(
@@ -637,13 +673,11 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                     axisLine: AxisLine(color: themeProvider.borderColor),
                     majorTickLines:
                         MajorTickLines(color: themeProvider.borderColor),
-                    labelRotation: -45, // Rotate labels for better readability
+                    labelRotation: -45,
                     labelIntersectAction: AxisLabelIntersectAction.rotate45,
                   ),
                   primaryYAxis: NumericAxis(
                     minimum: 0,
-                    maximum: 30,
-                    interval: 5,
                     title: AxisTitle(
                       text: 'Hours',
                       textStyle: TextStyle(color: themeProvider.textColor),
@@ -678,7 +712,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                         ),
                         labelAlignment: ChartDataLabelAlignment.top,
                       ),
-                      spacing: 0.2, // Add spacing between bars
+                      spacing: 0.2,
                     ),
                   ],
                 ),
