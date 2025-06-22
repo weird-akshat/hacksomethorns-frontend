@@ -9,7 +9,7 @@ Future<TreeNode> updateGoalFromNode(
     required TreeNode node,
     required String priority}) async {
   final baseUrl = dotenv.env['API_URL'];
-  final url = Uri.parse('${baseUrl}api/users/1/goals/${node.id}/');
+  final url = Uri.parse('${baseUrl}api/users/$userId/goals/${node.id}/');
 
   print(url);
   print(node.toJson(userId));
