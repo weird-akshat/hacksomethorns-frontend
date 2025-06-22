@@ -440,6 +440,7 @@ class _GoalState extends State<GoalWidget> {
                               if (nameController.text.trim().isNotEmpty) {
                                 setState(() => isLoading = true);
                                 final childNode = TreeNode(
+                                  priority: priority,
                                   id: 0,
                                   name: nameController.text.trim(),
                                 )
@@ -766,6 +767,7 @@ class _GoalState extends State<GoalWidget> {
 
                                 try {
                                   await updateGoalFromNode(
+                                    priority: priority,
                                     userId: Provider.of<UserProvider>(context,
                                             listen: false)
                                         .userId!,

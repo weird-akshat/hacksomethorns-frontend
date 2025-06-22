@@ -11,6 +11,8 @@ Future<List<TreeNode>> fetchGoalTree(String userId) async {
   print(uri);
   final response = await http.get(uri);
 
+  print(response.body);
+
   if (response.statusCode == 200) {
     print("crazy");
     List<dynamic> jsonData = jsonDecode(response.body);
@@ -27,7 +29,8 @@ List<TreeNode> _buildTree(List<dynamic> jsonList) {
 
   // First pass: create all nodes
   for (var json in jsonList) {
-    nodeMap[json['id']] = TreeNode(name: json['name'], id: json['id']);
+    nodeMap[json['id']] = TreeNode(
+        name: json['name'], id: json['id'], priority: json['priority']);
   }
 
   // Second pass: establish parent-child relationships

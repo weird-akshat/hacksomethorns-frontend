@@ -183,6 +183,7 @@ class _GoalRootPageState extends State<GoalRootPage>
                                     if (nameController.text.trim().isNotEmpty) {
                                       setState(() => isLoading = true);
                                       final rootGoal = TreeNode(
+                                        priority: priority,
                                         id: 0,
                                         name: nameController.text.trim(),
                                       )
@@ -503,10 +504,11 @@ class _GoalRootPageState extends State<GoalRootPage>
     }
   }
 
-  Future<void> _addGoal(String name) async {
+  Future<void> _addGoal(String name, String priority) async {
     setState(() => _isLoading = true);
     try {
       final newGoal = TreeNode(
+        priority: priority,
         id: 0,
         name: name,
       );

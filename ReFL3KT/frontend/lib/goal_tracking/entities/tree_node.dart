@@ -1,6 +1,6 @@
 class TreeNode {
   String name;
-  TreeNode({required this.name, required this.id});
+  TreeNode({required this.name, required this.id, required this.priority});
   TreeNode? parent;
   List<TreeNode> children = [];
 
@@ -9,11 +9,12 @@ class TreeNode {
   String? description;
   int? parentId; // goal ID of parent (
   String status = 'active';
-  String priority = 'medium';
+  String priority;
   DateTime? deadline; // ISO 8601 string
   bool isGroupGoal = false;
 
   void addChild(TreeNode node) {
+    print(node.toJson('100'));
     node.parent = this;
     node.parentId = id;
     children.add(node);
@@ -54,13 +55,14 @@ class TreeNode {
 
   factory TreeNode.fromJson(Map<String, dynamic> json) {
     return TreeNode(
+      priority: json['priority'],
       name: json['name'],
       id: json['id'],
     )
       ..description = json['description']
       ..parentId = json['parent']
       ..status = json['status'] == 'not_started' ? 'active' : 'completed'
-      ..priority = json['priority']
+      // ..priority = json['priority']
       ..deadline = json['deadline']
       ..isGroupGoal = json['is_group_goal'] ?? false;
   }

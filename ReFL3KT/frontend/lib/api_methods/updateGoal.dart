@@ -3,11 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
-Future<TreeNode> updateGoalFromNode({
-  required String userId,
-  required int goalId,
-  required TreeNode node,
-}) async {
+Future<TreeNode> updateGoalFromNode(
+    {required String userId,
+    required int goalId,
+    required TreeNode node,
+    required String priority}) async {
   final baseUrl = dotenv.env['API_URL'];
   final url = Uri.parse('${baseUrl}api/users/1/goals/${node.id}/');
 
@@ -26,6 +26,7 @@ Future<TreeNode> updateGoalFromNode({
     final data = jsonDecode(response.body);
     return TreeNode(
       id: node.id,
+      priority: priority,
       name: data['name'],
     )
       ..description = data['description']
