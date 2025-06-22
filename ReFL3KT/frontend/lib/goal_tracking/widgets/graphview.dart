@@ -5,6 +5,8 @@ import 'package:frontend/goal_tracking/configuration.dart';
 import 'package:frontend/goal_tracking/entities/tree_node.dart';
 import 'package:frontend/goal_tracking/widgets/edge_widget.dart';
 import 'package:frontend/goal_tracking/widgets/goal_widget.dart';
+import 'package:frontend/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class GraphView extends StatefulWidget {
   final TreeNode root;
@@ -55,8 +57,9 @@ class _GraphViewState extends State<GraphView> {
 
   void dfs(TreeNode node) {
     goals.add(GoalWidget(
-      userId: "1",
-      key: ValueKey('goal_${_widgetCounter++}_${identityHashCode(node)}'),
+      userId: Provider.of<UserProvider>(context, listen: false).userId!,
+      key: ValueKey('goal_${node.id}'),
+
       offset: positions[node]!,
       treeNode: node,
       onChildAdded: _refreshLayout,

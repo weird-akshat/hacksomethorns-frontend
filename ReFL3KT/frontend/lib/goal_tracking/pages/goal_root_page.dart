@@ -468,6 +468,8 @@ class _GoalRootPageState extends State<GoalRootPage>
       CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
     );
 
+    _fabAnimationController.forward(); // Add this line here
+    // _fetchGoals();
     _fetchGoals();
   }
 
@@ -629,7 +631,9 @@ class _GoalRootPageState extends State<GoalRootPage>
             return Transform.translate(
               offset: Offset(0, 30 * (1 - value)),
               child: Opacity(
-                opacity: value,
+                opacity: value.clamp(0.0, 1.0), // Add .clamp(0.0, 1.0)
+
+                // opacity: value,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
