@@ -275,7 +275,7 @@ class _GoalRootPageState extends State<GoalRootPage>
         return Transform.translate(
           offset: Offset(0, 20 * (1 - value)),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -320,7 +320,7 @@ class _GoalRootPageState extends State<GoalRootPage>
         return Transform.translate(
           offset: Offset(0, 20 * (1 - animValue)),
           child: Opacity(
-            opacity: animValue,
+            opacity: animValue.clamp(0, 1),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -372,7 +372,7 @@ class _GoalRootPageState extends State<GoalRootPage>
         return Transform.translate(
           offset: Offset(0, 20 * (1 - value)),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0, 1),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

@@ -33,7 +33,7 @@ Future<TreeNode> updateGoalFromNode(
       ..parentId = data['parent']
       ..status = data['status']
       ..priority = data['priority']
-      ..deadline = data['deadline'];
+      ..deadline = DateTime.parse(data['deadline']);
     // ..isGroupGoal = data['is_group_goal'];
   } else {
     throw Exception('Failed to update goal: ${response.body}');

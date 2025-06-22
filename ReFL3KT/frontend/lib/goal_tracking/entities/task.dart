@@ -3,7 +3,7 @@ class Task {
   String name;
   int? category;
   bool isRecurring;
-  bool isComplete;
+  String status;
   double timeSpent; // in hours
 
   Task({
@@ -11,16 +11,19 @@ class Task {
     required this.name,
     required this.category,
     required this.isRecurring,
-    this.isComplete = false,
+    this.status = 'not_started',
     this.timeSpent = 0.0,
   });
+
+  // Getter for backward compatibility
+  bool get isComplete => status == 'completed';
 
   Task copyWith({
     String? id,
     String? name,
     int? category,
     bool? isRecurring,
-    bool? isComplete,
+    String? status,
     double? timeSpent,
   }) {
     return Task(
@@ -28,7 +31,7 @@ class Task {
       name: name ?? this.name,
       category: category ?? this.category,
       isRecurring: isRecurring ?? this.isRecurring,
-      isComplete: isComplete ?? this.isComplete,
+      status: status ?? this.status,
       timeSpent: timeSpent ?? this.timeSpent,
     );
   }
@@ -39,8 +42,9 @@ class Task {
       name: json['title'],
       category: json['category'],
       isRecurring: json['is_recurring'] ?? false,
-      isComplete: json['status'] == 'completed',
-      timeSpent: (json['estimated_time'] ?? 0) / 60.0,
+      status: json['status'] ?? 'not_started',
+      timeSpent:
+          (json['actual_time_spent'] ?? 0) / 60.0, // Convert minutes to hours
     );
   }
 }

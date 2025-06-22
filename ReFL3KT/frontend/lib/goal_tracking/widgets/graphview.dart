@@ -106,6 +106,8 @@ class _GraphViewState extends State<GraphView> {
 
   @override
   void didChangeDependencies() {
+    goals.clear();
+    edges.clear();
     super.didChangeDependencies();
     _widgetCounter = 0;
     positions = tidyTreeLayout(

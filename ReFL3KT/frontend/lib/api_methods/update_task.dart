@@ -17,6 +17,7 @@ Future<Task> updateTask({
   final body = jsonEncode({
     'title': task.name,
     'goal': goalId,
+    'status': task.status,
     'description':
         '', // You can update this if you include it in the Task model
     'category': task.category,

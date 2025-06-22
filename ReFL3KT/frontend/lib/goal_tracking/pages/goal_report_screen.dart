@@ -43,6 +43,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() {
       isLoading = true;
       isError = false;
@@ -138,13 +139,34 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     }
   }
 
-  void _toggleTaskCompletion(Task task) {
-    setState(() {
-      final index = tasks.indexWhere((t) => t.id == task.id);
-      if (index != -1) {
-        tasks[index] = task.copyWith(isComplete: !task.isComplete);
+  void _toggleTaskCompletion(Task task) async {
+    // Don't toggle recurring tasks
+    if (task.isRecurring) return;
+
+    setState(() => isLoading = true);
+    try {
+      final newStatus =
+          task.status == 'completed' ? 'not_started' : 'completed';
+      final updatedTask = task.copyWith(status: newStatus);
+
+      await updateTask(
+        userId: Provider.of<UserProvider>(context, listen: false).userId!,
+        goalId: widget.goal.id,
+        task: updatedTask,
+      );
+      await _loadData();
+    } catch (e) {
+      print("Error toggling task: $e");
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update task: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    });
+    }
   }
 
   void _showAddTaskDialog() {
@@ -280,7 +302,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                           name: nameController.text.trim(),
                           category: selectedCategory!.categoryId,
                           isRecurring: isRecurring,
-                          isComplete: task?.isComplete ?? false,
+                          status: task?.status ?? 'not_started',
                           timeSpent: task?.timeSpent ?? 0.0,
                         );
 
@@ -553,7 +575,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   Widget _buildTaskCard(Task task, ThemeProvider themeProvider) {
-    final isCompletedNonRecurring = !task.isRecurring && task.isComplete;
+    final isCompletedNonRecurring =
+        !task.isRecurring && task.status == 'completed';
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -574,7 +597,33 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
           children: [
             // Checkbox for non-recurring tasks
             if (!task.isRecurring)
-              if (!task.isRecurring) SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _toggleTaskCompletion(task),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: task.status == 'completed'
+                        ? Colors.green
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: task.status == 'completed'
+                          ? Colors.green
+                          : themeProvider.borderColor,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: task.status == 'completed'
+                      ? Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 16,
+                        )
+                      : null,
+                ),
+              ),
+            if (!task.isRecurring) SizedBox(width: 8),
             // Status indicator circle
             Container(
               width: 12,
@@ -582,7 +631,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
               decoration: BoxDecoration(
                 color: task.isRecurring
                     ? themeProvider.primaryAccent
-                    : (task.isComplete
+                    : (task.status == 'completed'
                         ? Colors.green
                         : themeProvider.secondaryAccent),
                 shape: BoxShape.circle,
