@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/ai_scheduler.dart';
+// import 'package:frontend/ai_scheduler.dart';
 import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
 import 'package:frontend/providers/user_provider.dart';
+import 'package:frontend/task_scheduler.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/analytics_screen.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
@@ -205,7 +206,9 @@ class _HomeState extends State<Home> {
               onTap: () {
                 Navigator.of(context).pop();
                 setState(() {
-                  currentWidgetPage = TaskSchedulerApp();
+                  currentWidgetPage = TaskSchedulerHome(
+                      userId: Provider.of<UserProvider>(context, listen: false)
+                          .userId!);
                 });
               },
             ),

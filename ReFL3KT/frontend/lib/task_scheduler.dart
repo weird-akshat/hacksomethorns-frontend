@@ -1,47 +1,17 @@
 import 'package:flutter/material.dart';
 import 'ai_scheduler_api.dart';
 
-class TaskSchedulerApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Task Scheduler',
-      theme: ThemeData.dark().copyWith(
-        primaryColor: Colors.blue,
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.grey[900],
-          elevation: 0,
-        ),
-        cardTheme: CardTheme(
-          color: Colors.grey[900],
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: TaskSchedulerHome(),
-    );
-  }
-}
-
 class TaskSchedulerHome extends StatefulWidget {
+  const TaskSchedulerHome({super.key, required this.userId});
+  final String userId;
+
   @override
   _TaskSchedulerHomeState createState() => _TaskSchedulerHomeState();
 }
 
 class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   final AiSchedulerAPi api = AiSchedulerAPi();
-  final String userID = "1"; // Replace with actual user ID
+  late String userID;
 
   List<Map<String, dynamic>> tasks = [];
   Map<String, dynamic> availability = {};
@@ -51,6 +21,7 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   @override
   void initState() {
     super.initState();
+    userID = widget.userId;
     _loadInitialData();
   }
 
@@ -74,52 +45,6 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
     }
   }
 
-  Future<void> _completeTask(String taskID, int index) async {
-    try {
-      await api.completeTask(userID, taskID);
-      setState(() {
-        tasks.removeAt(index);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Task completed successfully!'),
-          backgroundColor: Colors.green[700],
-        ),
-      );
-    } catch (e) {
-      print('Error completing task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error completing task: $e'),
-          backgroundColor: Colors.red[700],
-        ),
-      );
-    }
-  }
-
-  Future<void> _skipTask(String taskID, int index) async {
-    try {
-      await api.skipTask(userID, taskID);
-      setState(() {
-        tasks.removeAt(index);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Task skipped'),
-          backgroundColor: Colors.orange[700],
-        ),
-      );
-    } catch (e) {
-      print('Error skipping task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error skipping task: $e'),
-          backgroundColor: Colors.red[700],
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,6 +53,13 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
         title: Text('Task Scheduler', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.grey[900],
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadInitialData,
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator(color: Colors.blue))
@@ -189,6 +121,11 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
                 'End Time: ${availability['end_time'] ?? 'Not set'}',
                 style: TextStyle(color: Colors.white70),
               ),
+              if (availability['day_of_week'] != null)
+                Text(
+                  'Day: ${_getDayName(availability['day_of_week'])}',
+                  style: TextStyle(color: Colors.white70),
+                ),
             ] else
               Text(
                 'No availability set',
@@ -213,9 +150,8 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   }
 
   Widget _buildScheduleStatsCard() {
-    // Process the schedule details data properly
     int totalTasks = 0;
-    String totalTime = '0h';
+    String totalTime = '0m';
 
     if (scheduleDetails.isNotEmpty) {
       // Handle total tasks
@@ -232,9 +168,9 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
       var timeValue = scheduleDetails['total_time'];
       if (timeValue != null) {
         if (timeValue is double) {
-          totalTime = '${timeValue.toStringAsFixed(1)}h';
+          totalTime = '${timeValue.toStringAsFixed(1)}m';
         } else if (timeValue is int) {
-          totalTime = '${timeValue}h';
+          totalTime = '${timeValue}m';
         } else if (timeValue is String) {
           double? parsedTime = double.tryParse(timeValue);
           if (parsedTime != null) {
@@ -278,11 +214,7 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
                   totalTasks.toString(),
                   Icons.task_alt,
                 ),
-                _buildStatItem(
-                  'Total Time',
-                  totalTime,
-                  Icons.timer,
-                ),
+                _buildStatItem('Total Time', totalTime, Icons.timer),
               ],
             ),
           ],
@@ -336,13 +268,13 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
                     ),
                   ],
                 ),
-                TextButton(
-                  onPressed: _loadTopPriorityTasks,
-                  child: Text(
-                    'High Priority',
-                    style: TextStyle(color: Colors.blue[400]),
-                  ),
-                ),
+                // TextButton(
+                //   onPressed: _loadTopPriorityTasks,
+                //   child: Text(
+                //     'High Priority',
+                //     style: TextStyle(color: Colors.blue[400]),
+                //   ),
+                // ),
               ],
             ),
             SizedBox(height: 12),
@@ -366,6 +298,14 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
                               color: Colors.grey[400],
                             ),
                           ),
+                          SizedBox(height: 8),
+                          TextButton(
+                            onPressed: _scheduleNewTasks,
+                            child: Text(
+                              'Schedule Some Tasks',
+                              style: TextStyle(color: Colors.blue[400]),
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -386,59 +326,27 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   }
 
   Widget _buildTaskItem(Map<String, dynamic> task, int index) {
-    // Get the actual task ID from the task data
-    String taskID =
-        task['task_id']?.toString() ?? task['id']?.toString() ?? 'task_$index';
-
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task['task_title'] ?? 'Untitled Task',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.timer, size: 16, color: Colors.grey[400]),
-                    SizedBox(width: 4),
-                    Text(
-                      '${task['estimated_time'] ?? 'Unknown'} minutes',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                    ),
-                  ],
-                ),
-                if (taskID != 'task_$index') ...[
-                  SizedBox(height: 2),
-                  Text(
-                    'ID: $taskID',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                ],
-              ],
+          Text(
+            task['task_title'] ?? task['title'] ?? 'Untitled Task',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
             ),
           ),
+          SizedBox(height: 4),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                onPressed: () => _completeTask(taskID, index),
-                icon: Icon(Icons.check_circle, color: Colors.green[400]),
-                tooltip: 'Complete Task',
-              ),
-              IconButton(
-                onPressed: () => _skipTask(taskID, index),
-                icon: Icon(Icons.skip_next, color: Colors.orange[400]),
-                tooltip: 'Skip Task',
+              Icon(Icons.timer, size: 16, color: Colors.grey[400]),
+              SizedBox(width: 4),
+              Text(
+                '${task['estimated_time'] ?? task['duration'] ?? 'Unknown'} minutes',
+                style: TextStyle(color: Colors.grey[400], fontSize: 14),
               ),
             ],
           ),
@@ -515,8 +423,23 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   void _showAvailabilityDialog() {
     TimeOfDay startTime = TimeOfDay.now();
     TimeOfDay endTime = TimeOfDay.now().replacing(
-      hour: TimeOfDay.now().hour + 2,
+      hour: (TimeOfDay.now().hour + 2) % 24,
     );
+
+    // Days of the week with their corresponding integer values
+    List<Map<String, dynamic>> daysOfWeek = [
+      {'name': 'Sunday', 'value': 0},
+      {'name': 'Monday', 'value': 1},
+      {'name': 'Tuesday', 'value': 2},
+      {'name': 'Wednesday', 'value': 3},
+      {'name': 'Thursday', 'value': 4},
+      {'name': 'Friday', 'value': 5},
+      {'name': 'Saturday', 'value': 6},
+    ];
+
+    // Get current day (0=Sunday, 1=Monday, etc.)
+    int currentDayIndex = DateTime.now().weekday % 7; // Convert to 0-6 range
+    Map<String, dynamic> selectedDay = daysOfWeek[currentDayIndex];
 
     showDialog(
       context: context,
@@ -532,6 +455,58 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Day selection
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[600]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<Map<String, dynamic>>(
+                        value: selectedDay,
+                        isExpanded: true,
+                        dropdownColor: Colors.grey[800],
+                        style: TextStyle(color: Colors.white),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.blue[400],
+                        ),
+                        items: daysOfWeek.map((Map<String, dynamic> day) {
+                          return DropdownMenuItem<Map<String, dynamic>>(
+                            value: day,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  color: Colors.blue[400],
+                                  size: 16,
+                                ),
+                                SizedBox(width: 8),
+                                Text(day['name']),
+                                SizedBox(width: 8),
+                                Text(
+                                  '(${day['value']})',
+                                  style: TextStyle(
+                                    color: Colors.grey[400],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (Map<String, dynamic>? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              selectedDay = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
                   ListTile(
                     leading: Icon(Icons.access_time, color: Colors.blue[400]),
                     title: Text(
@@ -609,7 +584,11 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    await _updateAvailability(startTime, endTime);
+                    await _updateAvailability(
+                      startTime,
+                      endTime,
+                      selectedDay['value'],
+                    );
                     Navigator.of(context).pop();
                   },
                   child: Text('Save'),
@@ -629,6 +608,7 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   Future<void> _updateAvailability(
     TimeOfDay startTime,
     TimeOfDay endTime,
+    int dayOfWeek,
   ) async {
     try {
       final startTimeStr =
@@ -636,25 +616,52 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
       final endTimeStr =
           '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
 
-      if (availability.isEmpty) {
-        await api.addAvailability(userID, startTimeStr, endTimeStr);
-      } else {
-        await api.updateAvailability(userID, startTimeStr, endTimeStr);
-      }
+      // Get day name for display purposes
+      List<String> dayNames = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      String dayName = dayNames[dayOfWeek];
+
+      print(
+        'Updating availability: $dayName ($dayOfWeek) $startTimeStr - $endTimeStr',
+      );
+      print('User ID: $userID');
+
+      // Always try to add availability with all required fields
+      await api.addAvailability(userID, startTimeStr, endTimeStr, dayOfWeek);
 
       await _loadInitialData();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Availability updated successfully!'),
+          content: Text('Availability updated successfully for $dayName!'),
           backgroundColor: Colors.green[700],
         ),
       );
     } catch (e) {
       print('Error updating availability: $e');
+
+      String errorMessage = 'Error updating availability';
+      if (e.toString().contains('400')) {
+        errorMessage = 'Invalid data provided. Please check your input.';
+      } else if (e.toString().contains('404')) {
+        errorMessage = 'Availability endpoint not found.';
+      } else if (e.toString().contains('403')) {
+        errorMessage = 'Access denied. Check your permissions.';
+      } else if (e.toString().contains('500')) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error updating availability: $e'),
+          content: Text(errorMessage),
           backgroundColor: Colors.red[700],
+          duration: Duration(seconds: 4),
         ),
       );
     }
@@ -845,5 +852,29 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
     }
 
     return timeValue.toString();
+  }
+
+  String _getDayName(dynamic dayValue) {
+    List<String> dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+
+    if (dayValue is int && dayValue >= 0 && dayValue <= 6) {
+      return dayNames[dayValue];
+    } else if (dayValue is String) {
+      int? dayInt = int.tryParse(dayValue);
+      if (dayInt != null && dayInt >= 0 && dayInt <= 6) {
+        return dayNames[dayInt];
+      }
+      return dayValue; // Return as-is if it's already a string name
+    }
+
+    return 'Unknown';
   }
 }
