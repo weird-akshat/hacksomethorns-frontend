@@ -103,7 +103,8 @@ class _HomeState extends State<Home> {
               actions: [
                 if (!(currentWidgetPage is CategoryAnalytics ||
                     currentWidgetPage is AnalyticsScreen ||
-                    currentWidgetPage is GoalRootPage))
+                    currentWidgetPage is GoalRootPage ||
+                    currentWidgetPage is TaskSchedulerHome))
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GestureDetector(
@@ -147,7 +148,9 @@ class _HomeState extends State<Home> {
                     ? 'Category Analytics'
                     : currentWidgetPage is AnalyticsScreen
                         ? 'Analytics'
-                        : 'Timer',
+                        : currentWidgetPage is TaskSchedulerHome
+                            ? 'Task Scheduler'
+                            : 'Timer',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: themeProvider.isDarkMode
@@ -157,67 +160,103 @@ class _HomeState extends State<Home> {
               ),
             ),
       drawer: Drawer(
-        child: ListView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text('Menu'),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: const [
+                  Text(
+                    'Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  // Text(
+                  //   'Navigate through sections',
+                  //   style: TextStyle(
+                  //     color: Colors.white70,
+                  //     fontSize: 14,
+                  //   ),
+                  // ),
+                ],
+              ),
             ),
-
-            const Divider(),
-            ListTile(
-              title: const Text('Time Tracking Page'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = const TimeTrackingPage();
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('Category Wise Analytics'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = const CategoryAnalytics();
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('Analytics'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = const AnalyticsScreen();
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('Goal Root Page'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = GoalRootPage(_openHomeDrawer);
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('Task Scheduler'),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentWidgetPage = TaskSchedulerHome(
-                      userId: Provider.of<UserProvider>(context, listen: false)
-                          .userId!);
-                });
-              },
-            ),
-            // Add logout option here
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: _logout,
+            Expanded(
+              child: ListView(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.timer),
+                    title: const Text('Time Tracking'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        currentWidgetPage = const TimeTrackingPage();
+                      });
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.pie_chart),
+                    title: const Text('Category Analytics'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        currentWidgetPage = const CategoryAnalytics();
+                      });
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.bar_chart),
+                    title: const Text('Analytics'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        currentWidgetPage = const AnalyticsScreen();
+                      });
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.flag),
+                    title: const Text('Goal Overview'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        currentWidgetPage = GoalRootPage(_openHomeDrawer);
+                      });
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: const Text('Task Scheduler'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        currentWidgetPage = TaskSchedulerHome(
+                          userId:
+                              Provider.of<UserProvider>(context, listen: false)
+                                  .userId!,
+                        );
+                      });
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.redAccent),
+                    title: const Text('Logout'),
+                    onTap: _logout,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
