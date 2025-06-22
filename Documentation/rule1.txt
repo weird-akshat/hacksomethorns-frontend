@@ -1,0 +1,3 @@
+- Cleared the clutter and organized the repository
+- Contains the back-end and the front-end working with two seperate folders
+- All the different branches have their purpose and some are waiting for integration.
