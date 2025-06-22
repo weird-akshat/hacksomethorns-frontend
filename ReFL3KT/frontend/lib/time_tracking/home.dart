@@ -149,7 +149,7 @@ class _HomeState extends State<Home> {
                     : currentWidgetPage is AnalyticsScreen
                         ? 'Analytics'
                         : currentWidgetPage is TaskSchedulerHome
-                            ? 'Task Scheduler'
+                            ? 'AI Task Scheduler'
                             : 'Timer',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -237,7 +237,7 @@ class _HomeState extends State<Home> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.calendar_today),
-                    title: const Text('Task Scheduler'),
+                    title: const Text('AI Task Scheduler'),
                     onTap: () {
                       Navigator.of(context).pop();
                       setState(() {
