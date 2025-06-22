@@ -14,6 +14,8 @@ class TreeNode {
   bool isGroupGoal = false;
 
   void addChild(TreeNode node) {
+    node.parent = this;
+    node.parentId = id;
     children.add(node);
     node.parent = this;
   }
@@ -27,6 +29,7 @@ class TreeNode {
   void removeChild(TreeNode node) {
     children.remove(node);
     node.parent = null;
+    node.parentId = 0;
   }
 
   void changeParent(TreeNode newParent) {

@@ -444,6 +444,8 @@ class _GoalState extends State<GoalWidget> {
                                   name: nameController.text.trim(),
                                 )
                                   ..description = ''
+                                  ..parent = widget.treeNode
+                                  ..parentId = widget.treeNode.id
                                   ..priority = priority
                                   ..status = status
                                   ..deadline = deadline
@@ -451,6 +453,8 @@ class _GoalState extends State<GoalWidget> {
                                   ..parentId = widget.treeNode.id;
 
                                 try {
+                                  print(
+                                      "child Node ${childNode.toJson(Provider.of<UserProvider>(context, listen: false).userId!)}");
                                   final TreeNode returnedGoal =
                                       await postGoalFromTreeNode(
                                     childNode,

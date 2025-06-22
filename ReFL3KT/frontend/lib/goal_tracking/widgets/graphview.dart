@@ -56,6 +56,7 @@ class _GraphViewState extends State<GraphView> {
   }
 
   void dfs(TreeNode node) {
+    print(node.toJson('10'));
     goals.add(GoalWidget(
       userId: Provider.of<UserProvider>(context, listen: false).userId!,
       key: ValueKey('goal_${node.id}'),

@@ -685,19 +685,16 @@ class _GoalRootPageState extends State<GoalRootPage>
             builder: (context, child) {
               return Transform.scale(
                 scale: _fabScaleAnimation.value,
-                child: Transform.rotate(
-                  angle: _fabRotationAnimation.value * 0.5,
-                  child: IconButton(
-                    icon: Icon(Icons.add_circle,
-                        color: themeProvider.secondaryAccent, size: 28),
-                    onPressed: () {
-                      _showCreateRootGoalDialog(
-                          context,
-                          Provider.of<UserProvider>(context, listen: false)
-                              .userId!,
-                          onGoalAdded: _fetchGoals);
-                    },
-                  ),
+                child: IconButton(
+                  icon: Icon(Icons.add_circle,
+                      color: themeProvider.secondaryAccent, size: 28),
+                  onPressed: () {
+                    _showCreateRootGoalDialog(
+                        context,
+                        Provider.of<UserProvider>(context, listen: false)
+                            .userId!,
+                        onGoalAdded: _fetchGoals);
+                  },
                 ),
               );
             },
