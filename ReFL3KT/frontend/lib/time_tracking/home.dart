@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/ai_scheduler.dart';
 import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
 import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/analytics_screen.dart';
@@ -196,6 +197,15 @@ class _HomeState extends State<Home> {
                 Navigator.of(context).pop();
                 setState(() {
                   currentWidgetPage = GoalRootPage(_openHomeDrawer);
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Goal Root Page'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  currentWidgetPage = TaskSchedulerApp();
                 });
               },
             ),
