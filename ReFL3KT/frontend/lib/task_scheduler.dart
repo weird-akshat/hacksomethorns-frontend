@@ -49,18 +49,18 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text('Task Scheduler', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.grey[900],
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadInitialData,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   title: Text('Task Scheduler', style: TextStyle(color: Colors.white)),
+      //   backgroundColor: Colors.grey[900],
+      //   elevation: 0,
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(Icons.refresh, color: Colors.white),
+      //       onPressed: _loadInitialData,
+      //       tooltip: 'Refresh',
+      //     ),
+      //   ],
+      // ),
       body: isLoading
           ? Center(child: CircularProgressIndicator(color: Colors.blue))
           : RefreshIndicator(
@@ -210,11 +210,16 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
-                  'Total Tasks',
+                  'Total Tasks Today',
                   totalTasks.toString(),
                   Icons.task_alt,
                 ),
-                _buildStatItem('Total Time', totalTime, Icons.timer),
+                // _buildStatItem(
+                //   '',
+                //   ',
+                //   Icons.access_time,
+                // ),
+                // _buildStatItem('Total Time', totalTime, Icons.timer),
               ],
             ),
           ],
@@ -331,25 +336,36 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            task['task_title'] ?? task['title'] ?? 'Untitled Task',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.timer, size: 16, color: Colors.grey[400]),
-              SizedBox(width: 4),
+              Text("Task ${(index + 1).toString()}",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[400],
+                  )),
+              SizedBox(width: 8),
               Text(
-                '${task['estimated_time'] ?? task['duration'] ?? 'Unknown'} minutes',
-                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                task['task_title'] ?? task['title'] ?? 'Untitled Task',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
+          SizedBox(height: 4),
+          // Row(
+          //   children: [
+          //     Icon(Icons.timer, size: 16, color: Colors.grey[400]),
+          //     SizedBox(width: 4),
+          //     Text(
+          //       '${task['estimated_time'] ?? task['duration'] ?? 'Unknown'} minutes',
+          //       style: TextStyle(color: Colors.grey[400], fontSize: 14),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -404,16 +420,16 @@ class _TaskSchedulerHomeState extends State<TaskSchedulerHome> {
               ],
             ),
             SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _showSessionHistory,
-              icon: Icon(Icons.history),
-              label: Text('View Past Sessions'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[600],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
+            // ElevatedButton.icon(
+            //   onPressed: _showSessionHistory,
+            //   icon: Icon(Icons.history),
+            //   label: Text('View Past Sessions'),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Colors.purple[600],
+            //     foregroundColor: Colors.white,
+            //     padding: EdgeInsets.symmetric(vertical: 12),
+            //   ),
+            // ),
           ],
         ),
       ),

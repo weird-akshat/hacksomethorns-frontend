@@ -1,0 +1,88 @@
+[33mcommit 31ec4d17b8cfe5601c7bbb3c4418e67a9c5ef701[m
+Author: Akshat Pandey <thatweirdakshat@gmail.com>
+Date:   Sat Jun 21 08:15:30 2025 +0530
+
+    added the api methods for goal integration
+
+[1mdiff --git a/ReFL3KT/frontend/lib/api_methods/createTask.dart b/ReFL3KT/frontend/lib/api_methods/createTask.dart[m
+[1mnew file mode 100644[m
+[1mindex 0000000..7a5e0e6[m
+[1m--- /dev/null[m
+[1m+++ b/ReFL3KT/frontend/lib/api_methods/createTask.dart[m
+[36m@@ -0,0 +1,31 @@[m
+[32m+[m[32mimport 'dart:convert';[m
+[32m+[m
+[32m+[m[32mimport 'package:flutter_dotenv/flutter_dotenv.dart';[m
+[32m+[m[32mimport 'package:frontend/goal_tracking/entities/task.dart';[m
+[32m+[m[32mimport 'package:http/http.dart' as http;[m
+[32m+[m
+[32m+[m[32mFuture<Task> createTask(String userId, int goalId, Task task) async {[m
+[32m+[m[32m  final String apiUrl = dotenv.env['API_URL']!;[m
+[32m+[m[32m  final uri = Uri.parse('$apiUrl/users/$userId/goals/$goalId/tasks/');[m
+[32m+[m
+[32m+[m[32m  final response = await http.post([m
+[32m+[m[32m    uri,[m
+[32m+[m[32m    headers: {'Content-Type': 'application/json'},[m
+[32m+[m[32m    body: jsonEncode({[m
+[32m+[m[32m      'title': task.name,[m
+[32m+[m[32m      'description': '',[m
+[32m+[m[32m      'goal': goalId,[m
+[32m+[m[32m      'category': task.category,[m
+[32m+[m[32m      'is_recurring': task.isRecurring,[m
+[32m+[m[32m      'due_date': DateTime.now().toIso8601String(),[m
+[32m+[m[32m      'estimated_time': (task.timeSpent * 60).toInt(),[m
+[32m+[m[32m    }),[m
+[32m+[m[32m  );[m
+[32m+[m
+[32m+[m[32m  if (response.statusCode == 201 || response.statusCode == 200) {[m
+[32m+[m[32m    final Map<String, dynamic> data = jsonDecode(response.body);[m
+[32m+[m[32m    return Task.fromJson(data);[m
+[32m+[m[32m  } else {[m
+[32m+[m[32m    throw Exception('Failed to create task: ${response.body}');[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[1mdiff --git a/ReFL3KT/frontend/lib/api_methods/delete_task.dart b/ReFL3KT/frontend/lib/api_methods/delete_task.dart[m
+[1mnew file mode 100644[m
+[1mindex 0000000..142ae3d[m
+[1m--- /dev/null[m
+[1m+++ b/ReFL3KT/frontend/lib/api_methods/delete_task.dart[m
+[36m@@ -0,0 +1,18 @@[m
+[32m+[m[32mimport 'dart:convert';[m
+[32m+[m[32mimport 'package:http/http.dart' as http;[m
+[32m+[m[32mimport 'package:flutter_dotenv/flutter_dotenv.dart';[m
+[32m+[m
+[32m+[m[32mFuture<void> deleteTask({[m
+[32m+[m[32m  required int userId,[m
+[32m+[m[32m  required int goalId,[m
+[32m+[m[32m  required String taskId,[m
+[32m+[m[32m}) async {[m
+[32m+[m[32m  final String apiUrl = dotenv.env['API_URL']!;[m
+[32m+[m[32m  final uri = Uri.parse('$apiUrl/users/$userId/goals/$goalId/tasks/$taskId/');[m
+[32m+[m
+[32m+[m[32m  final response = await http.delete(uri);[m
+[32m+[m
+[32m+[m[32m  if (response.statusCode != 204) {[m
+[32m+[m[32m    throw Exception('Failed to delete task: ${response.body}');[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[1mdiff --git a/ReFL3KT/frontend/lib/api_methods/delete_user_goal.dart b/ReFL3KT/frontend/lib/api_methods/delete_user_goal.dart[m
+[1mnew file mode 100644[m
+[1mindex 0000000..6b10c00[m
+[1m--- /dev/null[m
+[1m+++ b/ReFL3KT/frontend/lib/api_methods/delete_user_goal.dart[m
+[36m@@ -0,0 +1,14 @@[m
+[32m+[m[32mimport 'package:http/http.dart' as http;[m
+[32m+[m[32mimport 'package:flutter_dotenv/flutter_dotenv.dart';[m
+[32m+[m
+[32m+[m[32mFuture<void> deleteUserGoal({required int userId, required int goalId}) async {[m
+[32m+[m[32m  final baseUrl = dotenv.env['API_URL'];[m
+[32m+[m[32m  final url = Uri.parse('${baseUrl}api/users/$userId/goals/$goalId/');[m
+[32m+[m
+[32m+[m[32m  print(url);[m
+[32m+[m[32m  final response = await http.delete(url);[m
+[32m+[m
+[32m+[m[32m  if (response.statusCode != 204) {[m
+[32m+[m[32m    throw Exception('Failed to delete goal: ${response.body}');[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[1mdiff --git a/ReFL3KT/frontend/lib/api_methods/fetch_goal_tree.dart b/ReF

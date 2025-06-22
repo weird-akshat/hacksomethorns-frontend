@@ -30,6 +30,8 @@ class AiSchedulerAPi {
   Future<void> scheduleTasks(String userID) async {
     final url = Uri.parse('${baseUrl}api/scheduling/schedule/$userID/');
 
+    print("post2$url");
+
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -49,6 +51,7 @@ class AiSchedulerAPi {
     List<Map<String, dynamic>> tasks = [];
 
     final url = Uri.parse('${baseUrl}api/scheduled-tasks/user/$userID/');
+    print("get3$url");
 
     try {
       final response = await http.get(
@@ -107,7 +110,7 @@ class AiSchedulerAPi {
   Future<Map<String, dynamic>> scheduleDetails(String userID) async {
     Map<String, dynamic> result = {};
     final url = Uri.parse('${baseUrl}api/sessions/user/$userID/');
-
+    print("get4$url");
     try {
       final response = await http.get(
         url,
@@ -173,7 +176,7 @@ class AiSchedulerAPi {
 
   Future<void> completeTask(String userID, String taskID) async {
     final url = Uri.parse('${baseUrl}api/scheduling/task-action/$taskID/');
-
+    print("post5$url");
     try {
       final response = await http.post(
         url,
@@ -207,7 +210,7 @@ class AiSchedulerAPi {
     final url = Uri.parse(
       '${baseUrl}api/scheduling/high-priority/$userID/?limit=5',
     );
-
+    print("getTopFiveTasks$url");
     try {
       final response = await http.get(
         url,
@@ -266,6 +269,8 @@ class AiSchedulerAPi {
 
     final url = Uri.parse('${baseUrl}api/availability/user/$userID/');
 
+    print("getUserAvailability$url");
+
     try {
       final response = await http.get(
         url,
@@ -312,7 +317,9 @@ class AiSchedulerAPi {
     String endTime,
   ) async {
     final url = Uri.parse('${baseUrl}api/availability/user/$userID/');
-    print(url);
+    print("updateAvailability$url");
+    // print(url);
+
     try {
       final response = await http.put(
         url,
@@ -345,7 +352,7 @@ class AiSchedulerAPi {
     int day_of_week,
   ) async {
     final url = Uri.parse('${baseUrl}api/availability/');
-
+    print("addAvailability$url");
     try {
       final response = await http.post(
         url,
@@ -385,6 +392,8 @@ class AiSchedulerAPi {
         headers: {'Content-Type': 'application/json'},
       );
 
+      print('taskRescheduler - URL: $url');
+
       print('taskRescheduler - Status: ${response.statusCode}');
       print('taskRescheduler - Response: ${response.body}');
 
@@ -403,7 +412,7 @@ class AiSchedulerAPi {
 
   Future<void> skipTask(String userID, String taskID) async {
     final url = Uri.parse('${baseUrl}api/scheduling/task-action/$taskID/');
-
+    print("skipTask$url");
     try {
       final response = await http.post(
         url,

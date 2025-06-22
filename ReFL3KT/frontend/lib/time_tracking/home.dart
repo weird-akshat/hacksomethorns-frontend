@@ -202,7 +202,7 @@ class _HomeState extends State<Home> {
               },
             ),
             ListTile(
-              title: const Text('Goal Root Page'),
+              title: const Text('Task Scheduler'),
               onTap: () {
                 Navigator.of(context).pop();
                 setState(() {
