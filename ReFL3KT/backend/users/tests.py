@@ -1,223 +1,188 @@
-"""
-User API Tests
-
-This module contains comprehensive tests for the user creation and retrieval endpoints.
-Tests cover both successful operations and error handling scenarios.
-
-Endpoints tested:
-- POST /api/create/ - Create a new user
-- GET /api/<user_id>/ - Get user details by ID
-
-To run these tests:
-    python manage.py test users
-"""
-
 from django.test import TestCase
-from django.urls import reverse
-from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from rest_framework import status
-from django.utils import timezone
+from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+from .models import UserProfile
 
-class UserCreationTests(APITestCase):
-    """
-    Test suite for user creation endpoint (POST /api/create/)
-    
-    Tests cover:
-    - Successful user creation with valid data
-    - Password validation and confirmation
-    - Duplicate username handling
-    - Required field validation
-    """
-    
+User = get_user_model()
+
+class UserModelTests(TestCase):
     def setUp(self):
-        """Set up test data for user creation tests"""
-        self.user = User.objects.create_user(
+        self.user_data = {
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'testpass123',
+            'first_name': 'Test',
+            'last_name': 'User',
+            'phone_number': '+1234567890'
+        }
+
+    def test_create_user(self):
+        """Test creating a new user"""
+        user = User.objects.create_user(**self.user_data)
+        self.assertEqual(user.username, 'testuser')
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(user.check_password('testpass123'))
+        self.assertEqual(user.phone_number, '+1234567890')
+
+    def test_create_user_profile(self):
+        """Test creating a user profile"""
+        user = User.objects.create_user(**self.user_data)
+        profile = UserProfile.objects.create(user=user, bio='Test bio')
+        self.assertEqual(profile.user, user)
+        self.assertEqual(profile.bio, 'Test bio')
+
+class UserAPITests(APITestCase):
+    def setUp(self):
+        self.user_data = {
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'testpass123',
+            'password_confirm': 'testpass123',
+            'first_name': 'Test',
+            'last_name': 'User',
+            'phone_number': '+1234567890'
+        }
+
+    def test_user_registration(self):
+        """Test user registration"""
+        url = '/api/auth/register/'
+        response = self.client.post(url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('token', response.data)
+        self.assertIn('user', response.data)
+
+    def test_user_registration_password_mismatch(self):
+        """Test user registration with password mismatch"""
+        url = '/api/auth/register/'
+        data = self.user_data.copy()
+        data['password_confirm'] = 'wrongpassword'
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_login(self):
+        """Test user login"""
+        # Create user first
+        user = User.objects.create_user(
             username='testuser',
-            first_name='Test',
-            last_name='User',
             email='test@example.com',
             password='testpass123'
         )
-        self.user_id = self.user.id
-
-    def test_create_user_success(self):
-        """
-        Test successful user creation via API
         
-        Verifies:
-        - User is created with correct data
-        - Response contains all expected fields
-        - User is actually saved to database
-        - Default values are set correctly
-        """
-        url = '/api/create/'
-        data = {
-            'username': 'newuser',
-            'first_name': 'New',
-            'last_name': 'User',
-            'email': 'new@example.com',
-            'password': 'testpass123',
-            'password_confirm': 'testpass123'
-        }
-        
-        response = self.client.post(url, data, format='json')
-        
-        # Verify response status and data
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['username'], 'newuser')
-        self.assertEqual(response.data['first_name'], 'New')
-        self.assertEqual(response.data['last_name'], 'User')
-        self.assertEqual(response.data['email'], 'new@example.com')
-        self.assertFalse(response.data['is_staff'])
-        self.assertTrue(response.data['is_active'])
-        self.assertIn('id', response.data)
-        self.assertIn('date_joined', response.data)
-        
-        # Verify user was actually created in database
-        user = User.objects.get(username='newuser')
-        self.assertEqual(user.first_name, 'New')
-        self.assertEqual(user.last_name, 'User')
-        self.assertEqual(user.email, 'new@example.com')
-    
-    def test_create_user_password_mismatch(self):
-        """
-        Test user creation with mismatched passwords
-        
-        Verifies that the API correctly rejects requests where
-        password and password_confirm don't match.
-        """
-        url = '/api/create/'
-        data = {
+        # Login
+        url = '/api/auth/login/'
+        login_data = {
             'username': 'testuser',
-            'first_name': 'Test',
-            'last_name': 'User',
-            'email': 'test@example.com',
-            'password': 'testpass123',
-            'password_confirm': 'differentpass'
+            'password': 'testpass123'
         }
-        
-        response = self.client.post(url, data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Passwords don\'t match', str(response.data))
-    
-    def test_create_user_duplicate_username(self):
-        """
-        Test user creation with duplicate username
-        
-        Verifies that the API correctly rejects requests to create
-        users with usernames that already exist.
-        """
-        # Try to create second user with same username
-        url = '/api/create/'
-        data = {
-            'username': 'testuser',
-            'first_name': 'Test2',
-            'last_name': 'User2',
-            'email': 'test2@example.com',
-            'password': 'testpass123',
-            'password_confirm': 'testpass123'
-        }
-        
-        response = self.client.post(url, data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('username', response.data['details'])
-    
-    def test_create_user_missing_required_fields(self):
-        """
-        Test user creation with missing required fields
-        
-        Verifies that the API correctly rejects requests that are
-        missing required fields (first_name, last_name, email).
-        """
-        url = '/api/create/'
-        data = {
-            'username': 'testuser',
-            'password': 'testpass123',
-            'password_confirm': 'testpass123'
-            # Missing first_name, last_name, email
-        }
-        
-        response = self.client.post(url, data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('first_name', response.data['details'])
-        self.assertIn('last_name', response.data['details'])
-        self.assertIn('email', response.data['details'])
-
-class UserDetailsTests(APITestCase):
-    """
-    Test suite for user details retrieval endpoint (GET /api/<user_id>/)
-    
-    Tests cover:
-    - Successful user details retrieval
-    - Handling of non-existent users
-    - Handling of invalid user IDs
-    """
-    
-    def setUp(self):
-        """Set up test data for user details tests"""
-        self.user = User.objects.create_user(
-            username='testuser',
-            first_name='Test',
-            last_name='User',
-            email='test@example.com',
-            password='testpass123',
-            is_staff=True,
-            is_active=True
-        )
-        self.user_id = self.user.id
-
-    def test_get_user_details_success(self):
-        """
-        Test successful user details retrieval via API
-        
-        Verifies:
-        - User details are returned correctly
-        - All expected fields are present
-        - Field values match the database
-        """
-        url = f'/api/{self.user_id}/'
-        
-        response = self.client.get(url)
-        
-        # Verify response status and data
+        response = self.client.post(url, login_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.user_id)
-        self.assertEqual(response.data['username'], 'testuser')
-        self.assertEqual(response.data['first_name'], 'Test')
-        self.assertEqual(response.data['last_name'], 'User')
-        self.assertEqual(response.data['email'], 'test@example.com')
-        self.assertTrue(response.data['is_staff'])
-        self.assertTrue(response.data['is_active'])
-        self.assertFalse(response.data['is_superuser'])
-        self.assertIn('date_joined', response.data)
-        self.assertIn('last_login', response.data)
+        self.assertIn('token', response.data)
 
-    def test_get_user_details_not_found(self):
-        """
-        Test user details retrieval for non-existent user
-        
-        Verifies that the API returns a 404 status when
-        trying to retrieve details for a user that doesn't exist.
-        """
-        url = '/api/99999/'  # Non-existent user ID
-        
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_user_login_invalid_credentials(self):
+        """Test user login with invalid credentials"""
+        url = '/api/auth/login/'
+        login_data = {
+            'username': 'nonexistent',
+            'password': 'wrongpassword'
+        }
+        response = self.client.post(url, login_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_user_details_invalid_id(self):
-        """
-        Test user details retrieval with invalid user ID
+    def test_get_current_user(self):
+        """Test getting current authenticated user"""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        token = Token.objects.create(user=user)
         
-        Verifies that the API handles invalid user IDs (non-integer)
-        gracefully and returns appropriate error responses.
-        """
-        url = '/api/abc/'  # Invalid user ID (not an integer)
-        
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        url = '/api/auth/me/'
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['user']['username'], 'testuser')
+
+    def test_get_all_users(self):
+        """Test getting all users"""
+        User.objects.create_user(username='user1', email='user1@example.com', password='pass123')
+        User.objects.create_user(username='user2', email='user2@example.com', password='pass123')
         
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        url = '/api/auth/users/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+
+    def test_get_user_by_id(self):
+        """Test getting user by ID"""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        url = f'/api/auth/users/{user.id}/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['user']['username'], 'testuser')
+
+    def test_update_user(self):
+        """Test updating user information"""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        token = Token.objects.create(user=user)
+        
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        url = '/api/auth/me/update/'
+        update_data = {
+            'first_name': 'Updated',
+            'last_name': 'Name'
+        }
+        response = self.client.put(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['user']['first_name'], 'Updated')
+
+    def test_logout_user(self):
+        """Test user logout"""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        token = Token.objects.create(user=user)
+        
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        url = '/api/auth/logout/'
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify token is deleted
+        self.assertFalse(Token.objects.filter(key=token.key).exists())
+
+    def test_change_password(self):
+        """Test changing user password"""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='oldpass123'
+        )
+        token = Token.objects.create(user=user)
+        
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        url = '/api/auth/me/change-password/'
+        password_data = {
+            'old_password': 'oldpass123',
+            'new_password': 'newpass123',
+            'new_password_confirm': 'newpass123'
+        }
+        response = self.client.post(url, password_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify password changed
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('newpass123'))
