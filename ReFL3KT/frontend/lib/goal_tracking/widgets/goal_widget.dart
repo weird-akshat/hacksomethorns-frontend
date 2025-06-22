@@ -340,7 +340,7 @@ class _GoalState extends State<GoalWidget> {
                         DropdownButtonFormField<String>(
                           value: priority,
                           decoration: InputDecoration(labelText: 'Priority'),
-                          items: ['high', 'urgent', 'medium', 'low']
+                          items: ['high', 'medium', 'low']
                               .map((e) => DropdownMenuItem(
                                     value: e,
                                     child: Text(e),
@@ -434,7 +434,7 @@ class _GoalState extends State<GoalWidget> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: isLoading
+                      onPressed: isLoading || deadline == null
                           ? null
                           : () async {
                               if (nameController.text.trim().isNotEmpty) {
@@ -507,7 +507,7 @@ class _GoalState extends State<GoalWidget> {
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
-                      child: isLoading
+                      child: isLoading || deadline == null
                           ? SizedBox(
                               width: 18,
                               height: 18,

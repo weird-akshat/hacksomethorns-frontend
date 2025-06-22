@@ -101,7 +101,7 @@ class _GoalRootPageState extends State<GoalRootPage>
                                 value: priority,
                                 label: 'Priority',
                                 icon: Icons.priority_high,
-                                items: ['high', 'urgent', 'medium', 'low'],
+                                items: ['high', 'medium', 'low'],
                                 themeProvider: themeProvider,
                                 enabled: !isLoading,
                                 onChanged: (val) =>
@@ -177,7 +177,9 @@ class _GoalRootPageState extends State<GoalRootPage>
                             child: const Text('Cancel'),
                           ),
                           ElevatedButton(
-                            onPressed: isLoading
+                            onPressed: isLoading ||
+                                    nameController.text.trim().isEmpty ||
+                                    deadline == null
                                 ? null
                                 : () async {
                                     if (nameController.text.trim().isNotEmpty) {
