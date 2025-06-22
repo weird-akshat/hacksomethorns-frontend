@@ -574,6 +574,99 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     );
   }
 
+  Widget _buildLubePointsCard(ThemeProvider themeProvider) {
+    if (analytics == null) return SizedBox();
+
+    final totalTimeSpent = analytics!['total_time_spent'] as num? ?? 0;
+    // Using 8.7 as multiplier to make it non-obvious
+    final lubePoints = (totalTimeSpent * 8.7).round();
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            themeProvider.primaryAccent.withOpacity(0.8),
+            themeProvider.secondaryAccent.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.primaryAccent.withOpacity(0.3),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.star_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Lube Points',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '$lubePoints',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Keep grinding! 🔥',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.trending_up,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTaskCard(Task task, ThemeProvider themeProvider) {
     final isCompletedNonRecurring =
         !task.isRecurring && task.status == 'completed';
@@ -714,6 +807,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
           ),
         ),
         SizedBox(height: 16),
+
+        _buildLubePointsCard(themeProvider),
 
         // Pie Chart
         Container(
