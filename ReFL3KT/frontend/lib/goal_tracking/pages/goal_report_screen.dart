@@ -83,7 +83,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     } catch (e) {
       print("Error in _addTask: $e");
       setState(() => isLoading = false);
-      // Show error to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -140,7 +139,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
   }
 
   void _toggleTaskCompletion(Task task) async {
-    // Don't toggle recurring tasks
     if (task.isRecurring) return;
 
     setState(() => isLoading = true);
@@ -148,7 +146,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
       final newStatus =
           task.status == 'completed' ? 'not_started' : 'completed';
       final updatedTask = task.copyWith(status: newStatus);
-
       await updateTask(
         userId: Provider.of<UserProvider>(context, listen: false).userId!,
         goalId: widget.goal.id,
@@ -184,10 +181,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     bool isRecurring = task?.isRecurring ?? false;
     Category? selectedCategory;
 
-    // Initialize with existing category if editing
     if (task != null) {
-      // You might need to fetch the category details here if needed
-      // selectedCategory = ...;
+      // Initialize with existing category if available
     }
 
     showDialog(
@@ -309,7 +304,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                         print("Created task object: ${newTask.name}");
 
                         Navigator.of(context).pop();
-
                         if (task == null) {
                           print("Calling _addTask");
                           _addTask(newTask);
@@ -320,7 +314,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeProvider.primaryAccent,
-                        foregroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -500,10 +494,8 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Task List Section
                 _buildTaskListSection(themeProvider),
                 SizedBox(height: 24),
-                // Charts Section
                 _buildChartsSection(themeProvider),
               ],
             ),
@@ -542,7 +534,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                     _showAddTaskDialog();
                   },
                   backgroundColor: themeProvider.primaryAccent,
-                  child: Icon(Icons.add, color: Colors.white),
+                  child: Icon(Icons.add, color: Colors.black),
                 ),
               ],
             ),
@@ -578,7 +570,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
     if (analytics == null) return SizedBox();
 
     final totalTimeSpent = analytics!['total_time_spent'] as num? ?? 0;
-    // Using 8.7 as multiplier to make it non-obvious
     final lubePoints = (totalTimeSpent * 8.7).round();
 
     return Container(
@@ -688,7 +679,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
         leading: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Checkbox for non-recurring tasks
             if (!task.isRecurring)
               GestureDetector(
                 onTap: () => _toggleTaskCompletion(task),
@@ -717,7 +707,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
                 ),
               ),
             if (!task.isRecurring) SizedBox(width: 8),
-            // Status indicator circle
             Container(
               width: 12,
               height: 12,
@@ -807,10 +796,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
           ),
         ),
         SizedBox(height: 16),
-
         _buildLubePointsCard(themeProvider),
-
-        // Pie Chart
         Container(
           decoration: BoxDecoration(
             color: themeProvider.cardColor,
@@ -882,10 +868,7 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
             ],
           ),
         ),
-
         SizedBox(height: 24),
-
-        // Bar Chart
         Container(
           decoration: BoxDecoration(
             color: themeProvider.cardColor,
@@ -963,7 +946,6 @@ class _GoalReportScreenState extends State<GoalReportScreen> {
             ],
           ),
         ),
-
         SizedBox(height: 24)
       ],
     );

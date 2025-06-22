@@ -108,17 +108,6 @@ class _GoalRootPageState extends State<GoalRootPage>
                                     setState(() => priority = val!),
                               ),
                               const SizedBox(height: 16),
-                              _buildAnimatedDropdown(
-                                value: status,
-                                label: 'Status',
-                                icon: Icons.track_changes,
-                                items: ['active', 'completed'],
-                                themeProvider: themeProvider,
-                                enabled: !isLoading,
-                                onChanged: (val) =>
-                                    setState(() => status = val!),
-                              ),
-                              const SizedBox(height: 16),
                               _buildDatePicker(
                                 deadline: deadline,
                                 themeProvider: themeProvider,
@@ -226,7 +215,7 @@ class _GoalRootPageState extends State<GoalRootPage>
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: themeProvider.primaryAccent,
-                              foregroundColor: Colors.white,
+                              foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 12),
                               shape: RoundedRectangleBorder(
