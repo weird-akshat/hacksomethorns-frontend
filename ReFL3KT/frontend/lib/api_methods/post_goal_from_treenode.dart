@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 
 Future<TreeNode> postGoalFromTreeNode(TreeNode node, String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
+
+  print(node.deadline);
   final uri = Uri.parse('${apiUrl}api/users/$userId/goals/');
   print(uri);
   print(node.toJson(userId));

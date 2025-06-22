@@ -1,6 +1,10 @@
 class TreeNode {
   String name;
-  TreeNode({required this.name, required this.id, required this.priority});
+  TreeNode(
+      {required this.name,
+      required this.id,
+      required this.priority,
+      this.deadline});
   TreeNode? parent;
   List<TreeNode> children = [];
 
@@ -17,6 +21,7 @@ class TreeNode {
     print(node.toJson('100'));
     node.parent = this;
     node.parentId = id;
+
     children.add(node);
     node.parent = this;
   }
@@ -58,12 +63,12 @@ class TreeNode {
       priority: json['priority'],
       name: json['name'],
       id: json['id'],
+      deadline: DateTime.parse(json['deadline']),
     )
       ..description = json['description']
       ..parentId = json['parent']
       ..status = json['status'] == 'not_started' ? 'active' : 'completed'
       // ..priority = json['priority']
-      ..deadline = json['deadline']
       ..isGroupGoal = json['is_group_goal'] ?? false;
   }
 }

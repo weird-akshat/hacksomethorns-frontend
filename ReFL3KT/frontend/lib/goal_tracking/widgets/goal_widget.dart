@@ -903,7 +903,7 @@ class _GoalState extends State<GoalWidget> {
                     SizedBox(height: 4),
                     if (widget.treeNode.deadline != null)
                       Text(
-                        'Deadline: ${widget.treeNode.deadline!.toString().split('T')[0]}',
+                        'Deadline: ${widget.treeNode.deadline!.toIso8601String().split('T')[0]}',
                         style: TextStyle(
                           fontSize: 9,
                           color: themeProvider.isDarkMode

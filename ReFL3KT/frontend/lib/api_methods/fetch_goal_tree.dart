@@ -30,7 +30,10 @@ List<TreeNode> _buildTree(List<dynamic> jsonList) {
   // First pass: create all nodes
   for (var json in jsonList) {
     nodeMap[json['id']] = TreeNode(
-        name: json['name'], id: json['id'], priority: json['priority']);
+        name: json['name'],
+        id: json['id'],
+        priority: json['priority'],
+        deadline: DateTime.parse(json['deadline']));
   }
 
   // Second pass: establish parent-child relationships
