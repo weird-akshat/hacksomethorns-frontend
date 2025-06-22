@@ -362,87 +362,67 @@ class _GoalRootPageState extends State<GoalRootPage>
     required DateTime? deadline,
     required ThemeProvider themeProvider,
     required bool enabled,
-    required ValueChanged<DateTime?> onDateSelected,
+    required void Function(DateTime date) onDateSelected,
   }) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutBack,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value.clamp(0, 1),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: themeProvider.borderColor.withOpacity(0.3),
+    return GestureDetector(
+      onTap: enabled
+          ? () async {
+              final DateTime? pickedDate = await showDatePicker(
+                context: context,
+                initialDate: deadline ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+                builder: (BuildContext context, Widget? child) {
+                  return Theme(
+                    data: ThemeData.dark().copyWith(
+                      colorScheme: ColorScheme.dark(
+                        primary: themeProvider.primaryAccent,
+                        surface: themeProvider.cardColor,
+                        onSurface: themeProvider.textColor,
+                      ),
+                      dialogBackgroundColor: themeProvider.cardColor,
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor: themeProvider.primaryAccent,
+                        ),
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (pickedDate != null) {
+                onDateSelected(pickedDate);
+              }
+            }
+          : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: themeProvider.cardColor.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: themeProvider.primaryAccent.withOpacity(0.5)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.date_range, color: themeProvider.primaryAccent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                deadline != null
+                    ? '${deadline.year}-${deadline.month.toString().padLeft(2, '0')}-${deadline.day.toString().padLeft(2, '0')}'
+                    : 'Select Deadline',
+                style: TextStyle(
+                  color: deadline != null
+                      ? themeProvider.textColor
+                      : themeProvider.textColor.withOpacity(0.6),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today,
-                      color: themeProvider.primaryAccent),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Deadline',
-                          style: TextStyle(
-                            color: themeProvider.textColor.withOpacity(0.7),
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          deadline != null
-                              ? '${deadline!.day}/${deadline!.month}/${deadline!.year}'
-                              : 'Not set',
-                          style: TextStyle(
-                            color: themeProvider.textColor,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit_calendar,
-                        color: themeProvider.secondaryAccent),
-                    onPressed: enabled
-                        ? () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: deadline ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                              builder: (context, child) {
-                                return Theme(
-                                  data: Theme.of(context).copyWith(
-                                    colorScheme:
-                                        ColorScheme.fromSwatch().copyWith(
-                                      primary: themeProvider.primaryAccent,
-                                    ),
-                                  ),
-                                  child: child!,
-                                );
-                              },
-                            );
-                            if (picked != null) {
-                              onDateSelected(picked);
-                            }
-                          }
-                        : null,
-                  ),
-                ],
-              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -1000,7 +980,6 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
               padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
-                  // NEW: Add checkbox at the top
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1008,7 +987,7 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
                         child: Text(
                           widget.treeNode.name ?? "Goal Name",
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 20,
                             fontWeight: FontWeight.w500,
                             color: themeProvider.isDarkMode
                                 ? Colors.white
@@ -1020,33 +999,6 @@ class _RootGoalWidgetState extends State<RootGoalWidget> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          if (widget.onGoalStatusChanged != null) {
-                            widget.onGoalStatusChanged!(!isCompleted);
-                          }
-                        },
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isCompleted ? Colors.green : Colors.grey,
-                              width: 2,
-                            ),
-                            color:
-                                isCompleted ? Colors.green : Colors.transparent,
-                          ),
-                          child: isCompleted
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 14,
-                                  color: Colors.white,
-                                )
-                              : null,
                         ),
                       ),
                     ],

@@ -177,8 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
             recoverPasswordButton: 'RECOVER',
             goBackButton: 'GO BACK',
             confirmPasswordError: 'Passwords do not match!',
-            recoverPasswordDescription: 'We will send you a recovery link',
-            recoverPasswordSuccess: 'Recovery email sent successfully!',
+            // recoverPasswordDescription: 'We will send you a recovery link',
+            // recoverPasswordSuccess: 'Recovery email sent successfully!',
           ),
           theme: LoginTheme(
             primaryColor: const Color(0xFF000000),
