@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+// import 'package:frontend/ai_scheduler.dart';
+import 'package:frontend/goal_tracking/pages/goal_root_page.dart';
+import 'package:frontend/providers/user_provider.dart';
+import 'package:frontend/task_scheduler.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/analytics_screen.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/time_tracking_page.dart';
@@ -8,7 +12,10 @@ import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart'
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
+import 'package:frontend/user_auth/api_service_auth.dart';
+import 'package:frontend/user_auth/login_screen.dart';
 import 'package:provider/provider.dart';
+// Add these imports
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -18,13 +25,25 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Widget currentWidgetPage = const TimeTrackingPage();
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  Widget currentWidgetPage = TimeTrackingPage();
   bool isLoading = true;
+  // bool isLoading = true;
+  bool _hasLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasLoaded) {
+      _hasLoaded = true;
+      _loadData();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // _loadData();
   }
 
   Future<void> _loadData() async {
@@ -32,81 +51,111 @@ class _HomeState extends State<Home> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.isEmpty()) {
-      await categoryProvider.loadCategories('1');
+      await categoryProvider
+          .loadCategories(Provider.of<UserProvider>(context).userId!);
     }
 
     final timelogProvider =
         Provider.of<TimelogProvider>(context, listen: false);
     if (timelogProvider.isEmpty()) {
-      await timelogProvider.loadTimeEntries();
+      await timelogProvider.loadTimeEntries(
+          Provider.of<UserProvider>(context, listen: false).userId!);
     }
 
     final currentEntryProvider =
         Provider.of<CurrentTimeEntryProvider>(context, listen: false);
-    await currentEntryProvider.loadCurrentEntry("1");
+    await currentEntryProvider.loadCurrentEntry(
+        Provider.of<UserProvider>(context, listen: false).userId!);
 
     setState(() => isLoading = false);
+  }
+
+  // Logout function
+  Future<void> _logout() async {
+    // Clear user provider
+    Provider.of<UserProvider>(context, listen: false).clearUser();
+
+    // Call API service logout
+    await AuthApiService().signOut();
+
+    // Navigate to login screen and clear history
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
+  void _openHomeDrawer() {
+    scaffoldKey.currentState!.openDrawer();
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    print("userd id");
+    print(Provider.of<UserProvider>(context).userId);
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          if (!(currentWidgetPage is CategoryAnalytics ||
-              currentWidgetPage is AnalyticsScreen))
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(25)),
+      key: scaffoldKey,
+      appBar: currentWidgetPage.runtimeType == GoalRootPage
+          ? null
+          : AppBar(
+              actions: [
+                if (!(currentWidgetPage is CategoryAnalytics ||
+                    currentWidgetPage is AnalyticsScreen ||
+                    currentWidgetPage is GoalRootPage))
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(25)),
+                          ),
+                          builder: (context) => const FractionallySizedBox(
+                            heightFactor: 0.6,
+                            child: NewTimeEntrySheet(),
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        Icons.add,
+                        color: themeProvider.isDarkMode
+                            ? timeEntryWidgetTextColorDark
+                            : timeEntryWidgetTextColorLight,
+                      ),
                     ),
-                    builder: (context) => const FractionallySizedBox(
-                      heightFactor: 0.6,
-                      child: NewTimeEntrySheet(),
-                    ),
-                  );
-                },
-                child: Icon(
-                  Icons.add,
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadData,
+                ),
+                IconButton(
+                  icon: Icon(
+                    themeProvider.isDarkMode
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
+                  ),
+                  onPressed: themeProvider.toggleTheme,
+                ),
+              ],
+              title: Text(
+                currentWidgetPage is CategoryAnalytics
+                    ? 'Category Analytics'
+                    : currentWidgetPage is AnalyticsScreen
+                        ? 'Analytics'
+                        : 'Timer',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                   color: themeProvider.isDarkMode
                       ? timeEntryWidgetTextColorDark
                       : timeEntryWidgetTextColorLight,
                 ),
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-            ),
-            onPressed: themeProvider.toggleTheme,
-          ),
-        ],
-        title: Text(
-          currentWidgetPage is CategoryAnalytics
-              ? 'Category Analytics'
-              : currentWidgetPage is AnalyticsScreen
-                  ? 'Analytics'
-                  : 'Timer',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: themeProvider.isDarkMode
-                ? timeEntryWidgetTextColorDark
-                : timeEntryWidgetTextColorLight,
-          ),
-        ),
-      ),
       drawer: Drawer(
         child: ListView(
           children: [
@@ -114,6 +163,7 @@ class _HomeState extends State<Home> {
               padding: EdgeInsets.all(8.0),
               child: Text('Menu'),
             ),
+
             const Divider(),
             ListTile(
               title: const Text('Time Tracking Page'),
@@ -141,6 +191,33 @@ class _HomeState extends State<Home> {
                   currentWidgetPage = const AnalyticsScreen();
                 });
               },
+            ),
+            ListTile(
+              title: const Text('Goal Root Page'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  currentWidgetPage = GoalRootPage(_openHomeDrawer);
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Goal Root Page'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  currentWidgetPage = TaskSchedulerHome(
+                      userId: Provider.of<UserProvider>(context, listen: false)
+                          .userId!);
+                });
+              },
+            ),
+            // Add logout option here
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: _logout,
             ),
           ],
         ),

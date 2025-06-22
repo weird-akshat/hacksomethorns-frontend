@@ -5,6 +5,7 @@ import 'package:frontend/api_methods/update_time_entry.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:provider/provider.dart';
@@ -57,7 +58,8 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
   Future<void> _loadEntry() async {
     final provider =
         Provider.of<CurrentTimeEntryProvider>(context, listen: false);
-    await provider.loadCurrentEntry(widget.userId);
+    await provider.loadCurrentEntry(
+        Provider.of<UserProvider>(context, listen: false).userId!);
 
     setState(() {
       timeEntry = provider.currentEntry;
@@ -152,7 +154,11 @@ class _CurrentTimeTrackingWidgetState extends State<CurrentTimeTrackingWidget> {
                             timeLogProvider.addTimeEntry(now, timeEntry);
                             timeLogProvider.sort();
 
-                            await updateTimeEntry(timeEntry);
+                            await updateTimeEntry(
+                                timeEntry,
+                                Provider.of<UserProvider>(context,
+                                        listen: false)
+                                    .userId!);
                             currentProvider.clearEntry();
                           } catch (e) {
                             // Handle error if needed

@@ -39,6 +39,8 @@ Future<Map<String, dynamic>> getCategoryAnalytics({
     final url = Uri.parse(
         '${apiUrl}api/users/$userId/categories/$categoryId/analytics/?_startTime=$formattedStartTime&_endTime=$formattedEndTime');
 
+    print(url);
+
     print('🌐 Making request to URL: $url');
     print('📤 Request headers: Content-Type: application/json');
 

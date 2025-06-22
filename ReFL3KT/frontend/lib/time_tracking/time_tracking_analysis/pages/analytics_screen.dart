@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:frontend/api_methods/api_service_analytics.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
@@ -73,8 +74,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       backgroundColor: backgroundColor,
       body: FutureBuilder(
         future: Future.wait([
-          ApiServiceAnalytics.getCategoryTimeSpentMap("1"),
-          ApiServiceAnalytics.getCategoryPercentageMap("1"),
+          ApiServiceAnalytics.getCategoryTimeSpentMap(
+              Provider.of<UserProvider>(context).userId!),
+          ApiServiceAnalytics.getCategoryPercentageMap(
+              Provider.of<UserProvider>(context).userId!),
         ]),
         builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

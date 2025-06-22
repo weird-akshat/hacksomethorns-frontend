@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/entities/category.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/pages/category_detailed_analytics.dart';
 import 'package:frontend/time_tracking/time_tracking_analysis/widgets/category_widget.dart';
@@ -29,7 +30,8 @@ class _CategoryAnalyticsState extends State<CategoryAnalytics> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.isEmpty()) {
-      categoryProvider.loadCategories('1'); // pass actual user ID here
+      categoryProvider.loadCategories(
+          Provider.of<UserProvider>(context, listen: false).userId!);
     }
     list = categoryProvider.list;
   }

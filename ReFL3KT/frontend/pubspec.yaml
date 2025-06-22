@@ -46,6 +46,10 @@ dependencies:
   share_plus: ^11.0.0
   pie_chart: ^5.4.0
   flutter_staggered_animations: ^1.1.1
+  flutter_login: ^5.0.0
+  flutter_secure_storage: ^9.2.4
+  font_awesome_flutter: ^10.8.0
+  lottie: ^3.3.0
   # Add these dependencies to pubspec.yaml:
 
 

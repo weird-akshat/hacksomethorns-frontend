@@ -7,7 +7,7 @@ Future<TimeEntry?> fetchCurrentTimeEntry(String userId) async {
   final String apiUrl = dotenv.env['API_URL']!;
   final uri =
       Uri.parse("${apiUrl}api/users/$userId/time-entries/current_time_entry/");
-
+//
   try {
     final response = await http.get(uri);
 

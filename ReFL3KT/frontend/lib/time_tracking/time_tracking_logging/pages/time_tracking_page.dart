@@ -4,6 +4,7 @@ import 'package:frontend/providers/category_provider.dart';
 import 'package:frontend/providers/current_time_entry_provider.dart';
 import 'package:frontend/providers/theme_provider.dart';
 import 'package:frontend/providers/timelog_provider.dart';
+import 'package:frontend/providers/user_provider.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/configuration.dart';
 import 'package:frontend/time_tracking/entities/time_entry.dart';
 import 'package:frontend/time_tracking/time_tracking_logging/pages/new_time_entry_sheet.dart';
@@ -29,18 +30,23 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.isEmpty()) {
-      categoryProvider.loadCategories('1'); // use actual user ID
+      categoryProvider.loadCategories(
+          Provider.of<UserProvider>(context, listen: false)
+              .userId!); // use actual user ID
     }
 
     final timelogProvider =
         Provider.of<TimelogProvider>(context, listen: false);
     if (timelogProvider.isEmpty()) {
-      timelogProvider.loadTimeEntries();
+      timelogProvider.loadTimeEntries(
+          Provider.of<UserProvider>(context, listen: false).userId!);
     }
 
     final currentEntryProvider =
         Provider.of<CurrentTimeEntryProvider>(context, listen: false);
-    currentEntryProvider.loadCurrentEntry("1"); // use actual user ID
+    currentEntryProvider.loadCurrentEntry(
+        Provider.of<UserProvider>(context, listen: false)
+            .userId!); // use actual user ID
   }
 
   @override
@@ -82,7 +88,7 @@ class _TimeTrackingPageState extends State<TimeTrackingPage> {
               },
               child: CurrentTimeTrackingWidget(
                 themeProvider: themeProvider,
-                userId: "1",
+                userId: Provider.of<UserProvider>(context).userId!,
               ),
             )
           ],

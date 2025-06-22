@@ -1,0 +1,72 @@
+is it really a productive app if it's increasing your work?
+
+progress percentage or waste of time? are you actually measuring progress?
+what do you mean my progress percentage went down cause i added a new task. so either i have to completely create all the tasks before starting to work on them
+or the progress percentage is useless. that's not how you track progess (even for a goal, goals are dynamic, they expand with your knowledge). 
+even if you remove that thing and only measure how many tasks you have completed, it doesn't tell you the whole picture, cause some tasks 
+can be as simple as buying a book, and some can be as complex as designing software architecture. would you say they are the same thing 
+do they measure equal weight? no of course not. but then how can we track progress? what's a better alternative? time. progress in terms 
+of time you spent on the task- how much time did it take you to buy a book, and how much time did it take to design a whole architecture. 
+that's the better alternative. that's our solution more to come later 
+
+
+why leaderboards are pointeless
+so completing a task gives me points, and there's a leaderboard? that means any one can just make pointless tasks and complete it for points
+therefore i get demotivated if i am being genuine and other people are not (and they won't), and to be honest comparing productivity with other people is pointless
+unpopular opinion- streaks are pointless (i'll die on this hill, i'll explain)
+let me explain- you are a (fucking) human, humans need rest. it has been scientifically proven that resting is very crucial for your productivity
+there are 2 ways you can maintain a streak- being honest and actually working daily without rest- which will cause burnout and productivity decline, and the 2nd way is cheating, like copying editorials to just fucking maintain your streak. what's the point of that shit ass thing then
+now, a counter argument can be made that, hey streaks have helped me, they give dopamine and helps you keep motivated. fully agreed, but what if i have a better solution
+and that solution again is (drumroll)...... time. if you actually can see, how much time you have been productive throughout a period of time that'll give you dopamine if you have hit high numbers
+and also it's much better as a metric, for example if a person solved one leetcode question daily for a 2 month peroid- you will have a 60 day max streak, and 60 questions solved
+now another scenario, you solve 5 questions a day for 5 days out of 7, and then take rest 2 days, by the end of 2 months you will have solved 200+ problems with a max streak of 5 days. you see the issue? 
+now in same scenario if you tracked time spent on solving leetcode, you could measure accurately how well you did and you are not burning yourself out, bro you can also understand your patterns, on average how much time does it take you to solve a question and other things
+like isn't it better in every way. if you want to take it a step ahead, you can also track other things like how much time did you play cricket, partied, etc etc
+now combine that with a journal, in which you write how you are feelings and mood. if you actually want to, you can figure out your mood patterns, behavior patterns based on your life activites that you are tracking.
+
+problems with simple to do lists /simple goal-task lists
+to do lists are great to be honest, but they have a problem apart from what i mentioned above (percentage completion) 
+let's explain with an example- let's say you create a goal- study for endsems- and you create 5 subjects as tasks to complete
+now each subject can't be completed in a day. say bye bye to your streak and points. now you can say- but akshat, i can create 
+subjects as goals and chapters as tasks. cool, so you can complete a chapter in a day? crazzy, until it's the endsem the next day i can't.
+okay okay, maybe you can create a chapter as a goal, and the topics as tasks? yeah this works, but you can't keep track of your main goal this way
+that is "study for endsems"- to do that you'll have to essentially combine the progress of all chapters of each subject and then each subject.
+and bro, this is only 2 levels, what if you goal has more than 2 levels. you are stuck with manual labour, is this your productivity app that's increasing your work 
+
+now imagine, a heirarchial tree like goal structure
+which you can expand on will, which won't force you to add all the tasks to show progress cause it will use time spent on the goal instead 
+and the best thing is it will show you all the data from the subtrees. so a task in the leaf goal will also be visible in the middle goal or root goal
+the time tracked on that will be included in that goal too. isn't that awesome, it is a simple solution but how easy does it make things to track. you can 
+visualize and see your progress of each goal and subgoal. oh you think a task of a goal can be further expanded, no problem
+delete that task, make a new subgoal in place of it. that's how simple it is. This is the core of the app that we are building. 
+and you know the best thing, you can create a goal and forget about it, just keep track of your time, which is as simple as starting 
+a timer before you start doing something, and ending it after completing it. that's it, no more going and updating tasks completed(you can do that later when you open the app and realise oh this task is completed, not like it's necessary)
+
+
+the time tracking feature is the backbone 
+the goal tracking feature is what i explained above and it uses time tracking. 
+journal is essentially a try at the idea that i mentioned about feelings and stuff. cause why do it at other places if you can do it here
+
+also
+why would i use your pdf summarizer when i can use google notebook llm for that? (no offense). 
+i would diss more but i didn't really pay that much attention. (on a side note, for that sdg project, why would i upload the picture of throwing plastic, even if i do actually throw it. i can upload the picture of a rock and it will consider the task implemented. the feature is nice but pointeless. and same problem with the leaderboard thing people can and will cheat)
+
+in essence productivity is not study tools. 
+"Productivity is commonly defined as the effectiveness of output in relation to input"
+and my app takes your input- your time entries and shows output- your goal progress
+
+i mean ui wise it might be not that good
+but it is a practical solution, that is built cause of the frustrations that i have faced in terms of productivity apps 
+(toggl track the goat)
+
+thank you
+yours truly
+
+okay damn (i have wasted a lot of time on this but will be helpful on monday, otherwise i'll forget explaining this)
+
+//these are the only things i remember till now about why these productivity apps are shit, will update later if something comes to mind
+
+
+
+
+
