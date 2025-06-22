@@ -1073,8 +1073,8 @@ class _GoalState extends State<GoalWidget> {
             onPanEnd: (_) {
               setState(() {
                 isDragging = false;
-                // left = widget.offset.dx;
-                // top = widget.offset.dy;
+                left = widget.offset.dx;
+                top = widget.offset.dy;
               });
             },
             onLongPress: _showGoalOptionsDialog,
