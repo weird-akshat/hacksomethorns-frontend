@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const Home(),
+          builder: (context) => Home(),
         ),
       );
     }
@@ -337,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onSubmitAnimationCompleted: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => const Home(),
+                builder: (context) => Home(),
               ),
             );
           },

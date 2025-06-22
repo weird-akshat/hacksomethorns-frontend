@@ -23,6 +23,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   Widget currentWidgetPage = TimeTrackingPage();
   bool isLoading = true;
   // bool isLoading = true;
@@ -82,6 +83,10 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void _openHomeDrawer() {
+    scaffoldKey.currentState!.openDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -89,60 +94,66 @@ class _HomeState extends State<Home> {
     print(Provider.of<UserProvider>(context).userId);
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          if (!(currentWidgetPage is CategoryAnalytics ||
-              currentWidgetPage is AnalyticsScreen))
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(25)),
+      key: scaffoldKey,
+      appBar: currentWidgetPage.runtimeType == GoalRootPage
+          ? null
+          : AppBar(
+              actions: [
+                if (!(currentWidgetPage is CategoryAnalytics ||
+                    currentWidgetPage is AnalyticsScreen ||
+                    currentWidgetPage is GoalRootPage))
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(25)),
+                          ),
+                          builder: (context) => const FractionallySizedBox(
+                            heightFactor: 0.6,
+                            child: NewTimeEntrySheet(),
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        Icons.add,
+                        color: themeProvider.isDarkMode
+                            ? timeEntryWidgetTextColorDark
+                            : timeEntryWidgetTextColorLight,
+                      ),
                     ),
-                    builder: (context) => const FractionallySizedBox(
-                      heightFactor: 0.6,
-                      child: NewTimeEntrySheet(),
-                    ),
-                  );
-                },
-                child: Icon(
-                  Icons.add,
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadData,
+                ),
+                IconButton(
+                  icon: Icon(
+                    themeProvider.isDarkMode
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
+                  ),
+                  onPressed: themeProvider.toggleTheme,
+                ),
+              ],
+              title: Text(
+                currentWidgetPage is CategoryAnalytics
+                    ? 'Category Analytics'
+                    : currentWidgetPage is AnalyticsScreen
+                        ? 'Analytics'
+                        : 'Timer',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                   color: themeProvider.isDarkMode
                       ? timeEntryWidgetTextColorDark
                       : timeEntryWidgetTextColorLight,
                 ),
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-            ),
-            onPressed: themeProvider.toggleTheme,
-          ),
-        ],
-        title: Text(
-          currentWidgetPage is CategoryAnalytics
-              ? 'Category Analytics'
-              : currentWidgetPage is AnalyticsScreen
-                  ? 'Analytics'
-                  : 'Timer',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: themeProvider.isDarkMode
-                ? timeEntryWidgetTextColorDark
-                : timeEntryWidgetTextColorLight,
-          ),
-        ),
-      ),
       drawer: Drawer(
         child: ListView(
           children: [
@@ -184,7 +195,7 @@ class _HomeState extends State<Home> {
               onTap: () {
                 Navigator.of(context).pop();
                 setState(() {
-                  currentWidgetPage = const GoalRootPage();
+                  currentWidgetPage = GoalRootPage(_openHomeDrawer);
                 });
               },
             ),
